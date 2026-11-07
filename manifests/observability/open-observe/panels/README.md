@@ -8,7 +8,7 @@ fail on them, so exclude this folder as well).
 | File | Dashboard | Folder in OpenObserve | Stream |
 |---|---|---|---|
 | `bot-telegram-overview.json` | Overview: interactions, error rate (gauge 0-100%), successes and errors over time, per-command table (total, errors, avg and p95 latency) | Bot Telegram | `fintracker_bot` |
-| `api-fintracker-api-metrics.json` | API Metrics. Tab **Home**: number of requests, requests over time, requests by status code. Tab **Errors**: 5xx over time, endpoints with most errors, 4xx by status code, errors by image version | API Fintracker | `fintracker_api` |
+| `api-fintracker-api-metrics.json` | API Metrics. Tab **Home**: number of requests, requests over time, requests by status code. Tab **Errors**: 5xx over time, 5xx error rate (gauge 0-10%), endpoints with most errors, 4xx by status code, errors by image version | API Fintracker | `fintracker_api` |
 
 All panels use Custom SQL. The bot panels read the usage lines logged by the bot
 (`bot.usage: event=<name> outcome=<ok|error> duration_ms=<n>`). The API panels read the

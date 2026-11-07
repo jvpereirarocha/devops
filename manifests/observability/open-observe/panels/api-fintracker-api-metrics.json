@@ -703,8 +703,8 @@
           "layout": {
             "x": 0,
             "y": 0,
-            "w": 192,
-            "h": 11,
+            "w": 92,
+            "h": 18,
             "i": 1
           },
           "htmlContent": "",
@@ -914,7 +914,7 @@
           ],
           "layout": {
             "x": 0,
-            "y": 29,
+            "y": 36,
             "w": 192,
             "h": 11,
             "i": 2
@@ -1088,8 +1088,8 @@
           ],
           "layout": {
             "x": 0,
-            "y": 11,
-            "w": 96,
+            "y": 18,
+            "w": 92,
             "h": 18,
             "i": 3
           },
@@ -1301,11 +1301,166 @@
             }
           ],
           "layout": {
-            "x": 96,
-            "y": 11,
-            "w": 96,
+            "x": 92,
+            "y": 18,
+            "w": 100,
             "h": 18,
             "i": 4
+          },
+          "htmlContent": "",
+          "markdownContent": "",
+          "customChartContent": " // To know more about ECharts , \n// visit: https://echarts.apache.org/examples/en/index.html \n// Example: https://echarts.apache.org/examples/en/editor.html?c=line-simple \n// Define your ECharts 'option' here. \n// 'data' variable is available for use and contains the response data from the search result and it is an array.\noption = {  \n \n};\n  "
+        },
+        {
+          "id": "Panel_ID5180910",
+          "type": "gauge",
+          "title": "5xx Error Rate",
+          "description": "",
+          "config": {
+            "show_legends": true,
+            "legends_position": null,
+            "unit": "percent",
+            "decimals": 2.0,
+            "line_thickness": 1.5,
+            "step_value": "0",
+            "top_results_others": false,
+            "axis_border_show": false,
+            "label_option": {
+              "rotate": 0.0
+            },
+            "axis_label_rotate": 0.0,
+            "show_symbol": false,
+            "line_interpolation": "smooth",
+            "legend_width": {
+              "unit": "px"
+            },
+            "legend_height": {
+              "unit": "px"
+            },
+            "base_map": {
+              "type": "osm"
+            },
+            "map_type": {
+              "type": "world"
+            },
+            "map_view": {
+              "zoom": 1.0,
+              "lat": 0.0,
+              "lng": 0.0
+            },
+            "map_symbol_style": {
+              "size": "by Value",
+              "size_by_value": {
+                "min": 1.0,
+                "max": 100.0
+              },
+              "size_fixed": 2.0
+            },
+            "drilldown": [],
+            "mark_line": [],
+            "override_config": [],
+            "connect_nulls": false,
+            "no_value_replacement": "",
+            "wrap_table_cells": false,
+            "table_transpose": false,
+            "table_dynamic_columns": false,
+            "mappings": [],
+            "color": {
+              "mode": "palette-classic-by-series",
+              "fixedColor": [
+                "#53ca53"
+              ],
+              "seriesBy": "last",
+              "colorBySeries": []
+            },
+            "trellis": {
+              "layout": null,
+              "num_of_columns": 1,
+              "group_by_y_axis": false
+            },
+            "show_gridlines": true,
+            "aggregation": "last",
+            "lat_label": "latitude",
+            "lon_label": "longitude",
+            "weight_label": "weight",
+            "name_label": "name",
+            "table_aggregations": [
+              "last"
+            ],
+            "promql_table_mode": "single",
+            "visible_columns": [],
+            "hidden_columns": [],
+            "sticky_columns": [],
+            "sticky_first_column": false,
+            "column_order": [],
+            "table_pagination": false,
+            "table_filtering": false,
+            "table_pivot_show_row_totals": false,
+            "table_pivot_show_col_totals": false,
+            "table_pivot_sticky_row_totals": false,
+            "table_pivot_sticky_col_totals": false,
+            "panel_time_enabled": false,
+            "show_exemplars": false
+          },
+          "queryType": "sql",
+          "queries": [
+            {
+              "query": "SELECT COALESCE(\n         round(100.0 * sum(CASE WHEN log LIKE '%HTTP/1.1\" 5__ %' THEN 1 ELSE 0 END) / NULLIF(count(*), 0), 2),\n         0) AS error_rate_5xx_pct\nFROM fintracker_api\nWHERE log LIKE '%HTTP/1.1\" %'",
+              "vrlFunctionQuery": "",
+              "customQuery": true,
+              "fields": {
+                "stream": "fintracker_api",
+                "stream_type": "logs",
+                "x": [],
+                "y": [
+                  {
+                    "label": "error_rate_5xx_pct",
+                    "alias": "error_rate_5xx_pct",
+                    "type": "build",
+                    "color": "#5960b2",
+                    "functionName": "count",
+                    "args": [
+                      {
+                        "type": "field",
+                        "value": {
+                          "field": "error_rate_5xx_pct",
+                          "streamAlias": null
+                        }
+                      }
+                    ],
+                    "isDerived": false,
+                    "havingConditions": [],
+                    "treatAsNonTimestamp": true,
+                    "showFieldAsJson": false
+                  }
+                ],
+                "z": [],
+                "breakdown": [],
+                "filter": {
+                  "filterType": "group",
+                  "logicalOperator": "AND",
+                  "conditions": []
+                }
+              },
+              "config": {
+                "promql_legend": "",
+                "layer_type": "scatter",
+                "weight_fixed": 1.0,
+                "limit": 0.0,
+                "min": 0.0,
+                "max": 10.0,
+                "time_shift": [],
+                "query_label": ""
+              },
+              "joins": []
+            }
+          ],
+          "layout": {
+            "x": 92,
+            "y": 0,
+            "w": 100,
+            "h": 18,
+            "i": 5
           },
           "htmlContent": "",
           "markdownContent": "",
