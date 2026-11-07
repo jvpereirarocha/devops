@@ -11,3 +11,6 @@ manifests/database/pg-secrets.yaml
 # Kubeconfig files
 kubeconfig*
 *.kubeconfig
+
+# Internal-only agent context (personal setup details)
+.agents/skills/my-setup.md
