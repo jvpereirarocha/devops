@@ -5,7 +5,9 @@ metadata:
   namespace: metallb-system
 spec:
   addresses:
-  - 192.168.18.2-192.168.18.200
+  # 192.168.18.7 is the k3s node (homelab) IP and must not be handed out to a Service.
+  - 192.168.18.2-192.168.18.6
+  - 192.168.18.8-192.168.18.200
 ---
 apiVersion: metallb.io/v1beta1
 kind: L2Advertisement
