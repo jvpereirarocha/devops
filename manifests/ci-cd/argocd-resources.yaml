@@ -1,6 +1,6 @@
 # Resource patches for the official ArgoCD manifest (applied by kustomization.yaml).
 # Container names must match the official manifest exactly.
-# Totals: limits.cpu 2.2 / requests.cpu 0.55 (quota: 3 / 1).
+# Totals: limits.cpu 2.2 / requests.cpu 0.65 (quota: 3 / 1).
 apiVersion: apps/v1
 kind: StatefulSet
 metadata:

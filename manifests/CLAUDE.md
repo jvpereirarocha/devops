@@ -30,7 +30,7 @@ kubectl apply -f <file> --dry-run=client --validate=true
 
 ## ArgoCD (Kustomize)
 
-ArgoCD is installed with Kustomize (no Helm) into `cicd-system`. `ci-cd/kustomization.yaml` pulls the official manifest (pinned version), sets the namespace, adds the namespace/quota/limit range, and patches resources (`argocd-resources.yaml`), server params (`argocd-cmd-params.yaml`) and the ClusterRoleBinding subjects. To install or update:
+ArgoCD is installed with Kustomize (no Helm) into `cicd-system`. `ci-cd/kustomization.yaml` pulls the official manifest (pinned version), sets the namespace, adds the namespace/quota/limit range, and patches resources (`argocd-resources.yaml`), server params (`argocd-cmd-params.yaml`) and the ClusterRoleBinding subjects, and adds the Traefik ingress `argocd.local` (`argocd-ingress.yaml`). Step-by-step install instructions are in `../k3s-commands.md` (Phase 2). To install or update:
 ```bash
 kubectl kustomize ci-cd/                                   # preview
 kubectl apply -k ci-cd/ --server-side --force-conflicts    # apply (server-side is required: the CRDs are too large for client-side apply)

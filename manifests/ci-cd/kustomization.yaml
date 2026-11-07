@@ -12,6 +12,8 @@ resources:
   - cicd-system-limit-range.yaml
   # Official ArgoCD manifest, pinned to a version.
   - https://raw.githubusercontent.com/argoproj/argo-cd/v3.3.8/manifests/install.yaml
+  # Traefik ingress (http://argocd.local).
+  - argocd-ingress.yaml
 
 patches:
   # CPU/memory for every container, so the pods fit the namespace quota.

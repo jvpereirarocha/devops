@@ -95,7 +95,7 @@ That headroom matters during a rolling update. The new pod starts before the old
 
 ### Does this load the server?
 
-No. Raising `limits.cpu` does not reserve CPU on the node; it only allows the pods together to *be able to* reach 3 cores. What Kubernetes actually reserves are the requests, and those stay low: 550m in total, within `requests.cpu: "1"`, which did not change. At the time, the node was using about 5% CPU.
+No. Raising `limits.cpu` does not reserve CPU on the node; it only allows the pods together to *be able to* reach 3 cores. What Kubernetes actually reserves are the requests, and those stay low: 650m in total, within `requests.cpu: "1"`, which did not change. At the time, the node was using about 5% CPU.
 
 ## Lessons
 

@@ -37,6 +37,8 @@ K3s bundles several tools to avoid external dependencies.
 ## CI/CD Pipeline Setup
 
 ### Phase 1 — Namespace & Quotas
+The namespace, ResourceQuota and LimitRange are part of the ArgoCD kustomization
+(`manifests/ci-cd/kustomization.yaml`), so Phase 2 creates them too. To apply them on their own:
 ```bash
 kubectl apply -f manifests/ci-cd/namespace.yaml
 kubectl apply -f manifests/ci-cd/cicd-system-resource-quota.yaml
@@ -48,36 +50,49 @@ kubectl describe resourcequota cicd-system-quota -n cicd-system
 kubectl describe limitrange cicd-system-limits -n cicd-system
 ```
 
-### Phase 2 — ArgoCD Installation
+### Phase 2 — ArgoCD Installation (Kustomize, no Helm)
+ArgoCD v3.3.8 (official manifest, pinned) is installed into `cicd-system` with Kustomize.
+The kustomization adds the namespace/quota/limit range, sets CPU/memory on every container
+(`argocd-resources.yaml`), runs the server without TLS (`argocd-cmd-params.yaml`), fixes the
+ClusterRoleBinding subjects to `cicd-system` and adds the Traefik ingress (`argocd-ingress.yaml`).
+
 ```bash
-# 1. Add the Argo Helm repo (once)
-helm repo add argo https://argoproj.github.io/argo-helm
-helm repo update
+# 1. Preview what will be created (no changes to the cluster)
+kubectl kustomize manifests/ci-cd/ | less
+kubectl apply -k manifests/ci-cd/ --server-side --dry-run=server
 
-# 2. Install ArgoCD into cicd-system
-helm install argocd argo/argo-cd \
-  --namespace cicd-system \
-  --values manifests/ci-cd/argocd-values.yaml \
-  --wait
+# 2. (Optional) In a second terminal, watch the pods come up
+kubectl get pods -n cicd-system -w
+kubectl get events -n cicd-system -w     # quota errors only show up here
 
-# 3. Apply the Traefik ingress
-kubectl apply -f manifests/ci-cd/argocd-ingress.yaml
+# 3. Install. --server-side is required: the CRDs are too large for client-side apply.
+#    Do not interrupt it halfway (see troubleshooting/2026-11-07-argocd-resource-quota.md).
+kubectl apply -k manifests/ci-cd/ --server-side --force-conflicts
 
-# 4. Add argocd.local to /etc/hosts (point to the Traefik LoadBalancer IP)
-#    Find the Traefik external IP first:
-kubectl get svc -n kube-system traefik
-#    Then add this line to /etc/hosts on the host machine:
-#    <TRAEFIK_EXTERNAL_IP>  argocd.local
+# 4. Wait until everything is ready
+kubectl rollout status statefulset/argocd-application-controller -n cicd-system
+kubectl wait --for=condition=available deployment --all -n cicd-system --timeout=300s
 
-# 5. Retrieve the initial admin password
+# 5. Verify: 7 pods Running, services and ingress present, quota not exceeded
+kubectl get all -n cicd-system
+kubectl get ingress -n cicd-system
+kubectl describe resourcequota cicd-system-quota -n cicd-system
+
+# 6. Add argocd.local to /etc/hosts on the client machine (Traefik LoadBalancer IP)
+kubectl get svc -n kube-system traefik     # EXTERNAL-IP, currently 192.168.18.2
+#    /etc/hosts line:
+#    192.168.18.2  argocd.local
+
+# 7. Retrieve the initial admin password
 kubectl get secret argocd-initial-admin-secret \
   -n cicd-system \
   -o jsonpath="{.data.password}" | base64 --decode && echo
 
 # ArgoCD UI is now available at http://argocd.local
-# Login: admin / <password from step 5>
+# Login: admin / <password from step 7>
 
-# 6. (Recommended) Change the admin password after first login, then delete the bootstrap secret
+# 8. (Recommended) Change the admin password after first login (User Info > Update Password,
+#    or `argocd account update-password`), then delete the bootstrap secret
 kubectl delete secret argocd-initial-admin-secret -n cicd-system
 ```
 
@@ -87,8 +102,18 @@ kubectl port-forward svc/argocd-server -n cicd-system 8080:80
 # UI: http://localhost:8080
 ```
 
-#### Upgrade / Uninstall
+#### Upgrade
+Change the version in the `install.yaml` URL in `manifests/ci-cd/kustomization.yaml`, check
+that the container names in `argocd-resources.yaml` still match the new manifest, then:
 ```bash
-helm upgrade argocd argo/argo-cd -n cicd-system -f manifests/ci-cd/argocd-values.yaml
-helm uninstall argocd -n cicd-system
+kubectl kustomize manifests/ci-cd/ > /dev/null    # must build without errors
+kubectl apply -k manifests/ci-cd/ --server-side --force-conflicts
+```
+
+#### Uninstall
+```bash
+# Removes everything in the kustomization, including the namespace, CRDs and cluster roles.
+# Delete the Applications first so their finalizers do not block the CRD deletion.
+kubectl delete applications --all -n cicd-system
+kubectl delete -k manifests/ci-cd/
 ```
