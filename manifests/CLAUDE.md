@@ -50,7 +50,7 @@ The cluster is organized into these namespaces:
 | `databases` | PostgreSQL StatefulSet (fintracker app DB) |
 | `homepage` | [Homepage](https://gethomepage.dev) dashboard |
 | `metallb-system` | MetalLB L2 pool `192.168.18.2–192.168.18.6` + `192.168.18.8–192.168.18.200` (`.7` is the node) |
-| `observability` | Prometheus + Grafana + OpenObserve (logs) |
+| `observability` | Prometheus + Grafana + OpenObserve (logs) + Fluent Bit (log collector) |
 | `github-actions` | Self-hosted GitHub Actions runner |
 
 **MetalLB** provides LoadBalancer IPs from the local LAN range. Services that need a stable LAN IP use `type: LoadBalancer` (e.g., Grafana at `.5`, Prometheus at `.6`). The pool skips `192.168.18.7`, the k3s node IP, so MetalLB never hands it to a Service.
@@ -66,6 +66,8 @@ kubectl create secret generic openobserve-secret -n observability \
   --from-literal=ZO_ROOT_USER_PASSWORD=<PASSWORD>
 ```
 Deleting the StatefulSet keeps the PVC; delete `data-openobserve-0` explicitly to wipe the data.
+
+**Fluent Bit** (`observability/fluent-bit/`) is a DaemonSet that tails `/var/log/containers` on the node and ships the fintracker API and bot logs to OpenObserve streams `fintracker_api` and `fintracker_bot`. The `tail` input globs depend on the Deployment names (`fintracker-deployment-*`, `fintracker-bot-deployment-*`): update them if a Deployment is renamed; add another input/output pair to ship a new app. A custom multiline parser joins Python tracebacks into one record, and a grep filter drops the Prometheus `GET /metrics` access logs. Offsets and the on-disk buffer live in the hostPath `/var/lib/fluent-bit`. Fluent Bit does not reload its ConfigMap: run `kubectl rollout restart daemonset/fluent-bit -n observability` after changing it. It authenticates with an OpenObserve service account whose token lives in the `fluent-bit-openobserve` Secret (keys `OPENOBSERVE_USER`, `OPENOBSERVE_TOKEN`), created outside git. OpenObserve rejects records older than 5 hours by default (`ZO_INGEST_ALLOWED_UPTO`), so old backlog is not ingested.
 
 **GitHub runner** (`pipeline/github-runner/deployment.yaml`) mounts the host Docker socket and uses a PAT stored in a secret. The secret must be created manually before applying the deployment:
 ```bash

@@ -1,0 +1,117 @@
+# Fluent Bit pipeline: tail the container log files of the fintracker API and bot,
+# join multi-line Python tracebacks, drop Prometheus scrape access logs, add Kubernetes
+# metadata and ship each app to its own OpenObserve stream.
+# Fluent Bit does not reload this file on its own: after changing it run
+#   kubectl rollout restart daemonset/fluent-bit -n observability
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: fluent-bit-config
+  namespace: observability
+data:
+  fluent-bit.yaml: |
+    service:
+      flush: 2
+      log_level: info
+      http_server: on
+      http_listen: 0.0.0.0
+      http_port: 2020
+      health_check: on
+      # Buffer chunks on disk so logs survive an OpenObserve restart or a Fluent Bit restart.
+      storage.path: /var/lib/fluent-bit/storage
+      storage.sync: normal
+      storage.backlog.mem_limit: 5M
+
+    multiline_parsers:
+      # A record starts with a Python logging timestamp ("2026-01-01 10:00:00,123 [ERROR] ...")
+      # or a uvicorn level prefix ("INFO:     ..."). Any other line (traceback frames, blank
+      # lines, "The above exception..." and the exception line) belongs to the previous record.
+      - name: python_app
+        type: regex
+        flush_timeout: 1000
+        rules:
+          - state: start_state
+            regex: '/^(\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}|[A-Z]+:\s)/'
+            next_state: cont
+          - state: cont
+            regex: '/^(?!\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}|[A-Z]+:\s)/'
+            next_state: cont
+
+    pipeline:
+      inputs:
+        # Pod log file names are <pod>_<namespace>_<container>-<id>.log. The globs depend on
+        # the Deployment names: update them if a Deployment is renamed.
+        - name: tail
+          tag: kube.api.*
+          path: /var/log/containers/fintracker-deployment-*_fintracker-dev_*.log
+          multiline.parser: cri
+          db: /var/lib/fluent-bit/tail-api.db
+          read_from_head: true
+          refresh_interval: 10
+          skip_long_lines: on
+          storage.type: filesystem
+
+        - name: tail
+          tag: kube.bot.*
+          path: /var/log/containers/fintracker-bot-deployment-*_fintracker-dev_*.log
+          multiline.parser: cri
+          db: /var/lib/fluent-bit/tail-bot.db
+          read_from_head: true
+          refresh_interval: 10
+          skip_long_lines: on
+          storage.type: filesystem
+
+      filters:
+        - name: multiline
+          match: kube.*
+          multiline.key_content: log
+          multiline.parser: python_app
+          emitter_storage.type: filesystem
+
+        # Prometheus scrapes the API every 10s; those access logs are pure noise.
+        - name: grep
+          match: kube.api.*
+          exclude: log "GET /metrics HTTP/1\.1"
+
+        - name: kubernetes
+          match: kube.api.*
+          kube_tag_prefix: kube.api.var.log.containers.
+          buffer_size: 0
+          labels: on
+          annotations: off
+
+        - name: kubernetes
+          match: kube.bot.*
+          kube_tag_prefix: kube.bot.var.log.containers.
+          buffer_size: 0
+          labels: on
+          annotations: off
+
+      outputs:
+        - name: http
+          match: kube.api.*
+          host: openobserve.observability.svc.cluster.local
+          port: 5080
+          uri: /api/default/fintracker_api/_json
+          format: json
+          json_date_key: _timestamp
+          json_date_format: iso8601
+          http_user: ${OPENOBSERVE_USER}
+          http_passwd: ${OPENOBSERVE_TOKEN}
+          compress: gzip
+          retry_limit: 10
+          storage.total_limit_size: 256M
+
+        - name: http
+          match: kube.bot.*
+          host: openobserve.observability.svc.cluster.local
+          port: 5080
+          uri: /api/default/fintracker_bot/_json
+          format: json
+          json_date_key: _timestamp
+          json_date_format: iso8601
+          http_user: ${OPENOBSERVE_USER}
+          http_passwd: ${OPENOBSERVE_TOKEN}
+          compress: gzip
+          retry_limit: 10
+          storage.total_limit_size: 256M

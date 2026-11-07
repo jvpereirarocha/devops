@@ -1,0 +1,20 @@
+# Exposes the Fluent Bit metrics (records in/out, retries, errors) to Prometheus.
+apiVersion: v1
+kind: Service
+metadata:
+  name: fluent-bit
+  namespace: observability
+  labels:
+    app: fluent-bit
+  annotations:
+    prometheus.io/scrape: "true"
+    prometheus.io/port: "2020"
+    prometheus.io/path: "/api/v2/metrics/prometheus"
+spec:
+  type: ClusterIP
+  selector:
+    app: fluent-bit
+  ports:
+    - name: http
+      port: 2020
+      targetPort: http
