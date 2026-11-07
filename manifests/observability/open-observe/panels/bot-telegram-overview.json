@@ -1,0 +1,783 @@
+{
+  "version": 8,
+  "dashboardId": "7524900335257649152",
+  "title": "Overview",
+  "description": "Overview about the Fintracker Telegram Bot",
+  "role": "",
+  "owner": "",
+  "tabs": [
+    {
+      "tabId": "default",
+      "name": "Metrics",
+      "panels": [
+        {
+          "id": "Panel_ID1892810",
+          "type": "metric",
+          "title": "Interactions",
+          "description": "",
+          "config": {
+            "show_legends": true,
+            "legends_position": null,
+            "decimals": 2.0,
+            "line_thickness": 1.5,
+            "step_value": "0",
+            "top_results_others": false,
+            "axis_border_show": false,
+            "label_option": {
+              "rotate": 0.0
+            },
+            "axis_label_rotate": 0.0,
+            "show_symbol": false,
+            "line_interpolation": "smooth",
+            "legend_width": {
+              "unit": "px"
+            },
+            "legend_height": {
+              "unit": "px"
+            },
+            "base_map": {
+              "type": "osm"
+            },
+            "map_type": {
+              "type": "world"
+            },
+            "map_view": {
+              "zoom": 1.0,
+              "lat": 0.0,
+              "lng": 0.0
+            },
+            "map_symbol_style": {
+              "size": "by Value",
+              "size_by_value": {
+                "min": 1.0,
+                "max": 100.0
+              },
+              "size_fixed": 2.0
+            },
+            "drilldown": [],
+            "mark_line": [],
+            "override_config": [],
+            "connect_nulls": false,
+            "no_value_replacement": "",
+            "wrap_table_cells": false,
+            "table_transpose": false,
+            "table_dynamic_columns": false,
+            "mappings": [],
+            "color": {
+              "mode": "palette-classic-by-series",
+              "fixedColor": [
+                "#53ca53"
+              ],
+              "seriesBy": "last",
+              "colorBySeries": []
+            },
+            "trellis": {
+              "layout": null,
+              "num_of_columns": 1,
+              "group_by_y_axis": false
+            },
+            "show_gridlines": true,
+            "aggregation": "last",
+            "lat_label": "latitude",
+            "lon_label": "longitude",
+            "weight_label": "weight",
+            "name_label": "name",
+            "table_aggregations": [
+              "last"
+            ],
+            "promql_table_mode": "single",
+            "visible_columns": [],
+            "hidden_columns": [],
+            "sticky_columns": [],
+            "sticky_first_column": false,
+            "column_order": [],
+            "table_pagination": false,
+            "table_pivot_show_row_totals": false,
+            "table_pivot_show_col_totals": false,
+            "table_pivot_sticky_row_totals": false,
+            "table_pivot_sticky_col_totals": false,
+            "panel_time_enabled": false,
+            "show_exemplars": false
+          },
+          "queryType": "sql",
+          "queries": [
+            {
+              "query": "SELECT count(*) AS interactions FROM fintracker_bot WHERE log LIKE '%bot.usage: event%'",
+              "vrlFunctionQuery": "",
+              "customQuery": true,
+              "fields": {
+                "stream": "fintracker_bot",
+                "stream_type": "logs",
+                "x": [],
+                "y": [
+                  {
+                    "label": "_timestamp",
+                    "alias": "interactions",
+                    "column": "interactions",
+                    "type": "build",
+                    "color": null,
+                    "functionName": "count",
+                    "args": [
+                      {
+                        "type": "field",
+                        "value": {
+                          "field": "_timestamp",
+                          "streamAlias": null
+                        }
+                      }
+                    ],
+                    "isDerived": false,
+                    "havingConditions": [],
+                    "treatAsNonTimestamp": false,
+                    "showFieldAsJson": false
+                  }
+                ],
+                "z": [],
+                "breakdown": [],
+                "filter": {
+                  "filterType": "group",
+                  "logicalOperator": "AND",
+                  "conditions": []
+                }
+              },
+              "config": {
+                "promql_legend": "",
+                "layer_type": "scatter",
+                "weight_fixed": 1.0,
+                "limit": 0.0,
+                "min": 0.0,
+                "max": 100.0,
+                "time_shift": [],
+                "query_label": ""
+              },
+              "joins": []
+            }
+          ],
+          "layout": {
+            "x": 0,
+            "y": 0,
+            "w": 96,
+            "h": 18,
+            "i": 1
+          },
+          "htmlContent": "",
+          "markdownContent": "",
+          "customChartContent": " // To know more about ECharts , \n// visit: https://echarts.apache.org/examples/en/index.html \n// Example: https://echarts.apache.org/examples/en/editor.html?c=line-simple \n// Define your ECharts 'option' here. \n// 'data' variable is available for use and contains the response data from the search result and it is an array.\noption = {  \n \n};\n  "
+        },
+        {
+          "id": "Panel_ID2813510",
+          "type": "gauge",
+          "title": "Error Rate",
+          "description": "",
+          "config": {
+            "show_legends": true,
+            "legends_position": null,
+            "unit": "percent",
+            "decimals": 1.0,
+            "line_thickness": 1.5,
+            "step_value": "0",
+            "top_results_others": false,
+            "axis_border_show": false,
+            "label_option": {
+              "rotate": 0.0
+            },
+            "axis_label_rotate": 0.0,
+            "show_symbol": false,
+            "line_interpolation": "smooth",
+            "legend_width": {
+              "unit": "px"
+            },
+            "legend_height": {
+              "unit": "px"
+            },
+            "base_map": {
+              "type": "osm"
+            },
+            "map_type": {
+              "type": "world"
+            },
+            "map_view": {
+              "zoom": 1.0,
+              "lat": 0.0,
+              "lng": 0.0
+            },
+            "map_symbol_style": {
+              "size": "by Value",
+              "size_by_value": {
+                "min": 1.0,
+                "max": 100.0
+              },
+              "size_fixed": 2.0
+            },
+            "drilldown": [],
+            "mark_line": [],
+            "override_config": [],
+            "connect_nulls": false,
+            "no_value_replacement": "",
+            "wrap_table_cells": false,
+            "table_transpose": false,
+            "table_dynamic_columns": false,
+            "mappings": [],
+            "color": {
+              "mode": "palette-classic-by-series",
+              "fixedColor": [
+                "#53ca53"
+              ],
+              "seriesBy": "last",
+              "colorBySeries": []
+            },
+            "trellis": {
+              "layout": null,
+              "num_of_columns": 1,
+              "group_by_y_axis": false
+            },
+            "show_gridlines": true,
+            "aggregation": "last",
+            "lat_label": "latitude",
+            "lon_label": "longitude",
+            "weight_label": "weight",
+            "name_label": "name",
+            "table_aggregations": [
+              "last"
+            ],
+            "promql_table_mode": "single",
+            "visible_columns": [],
+            "hidden_columns": [],
+            "sticky_columns": [],
+            "sticky_first_column": false,
+            "column_order": [],
+            "table_pagination": false,
+            "table_filtering": false,
+            "table_pivot_show_row_totals": false,
+            "table_pivot_show_col_totals": false,
+            "table_pivot_sticky_row_totals": false,
+            "table_pivot_sticky_col_totals": false,
+            "panel_time_enabled": false,
+            "show_exemplars": false
+          },
+          "queryType": "sql",
+          "queries": [
+            {
+              "query": "SELECT round(100.0 * sum(CASE WHEN log LIKE '%outcome=error%' THEN 1 ELSE 0 END) / count(*), 1) AS error_rate_pct\nFROM fintracker_bot\nWHERE log LIKE '%bot.usage: event=%'",
+              "vrlFunctionQuery": "",
+              "customQuery": true,
+              "fields": {
+                "stream": "fintracker_bot",
+                "stream_type": "logs",
+                "x": [
+                  {
+                    "label": "_timestamp",
+                    "alias": "x_axis_1",
+                    "column": "x_axis_1",
+                    "type": "build",
+                    "color": null,
+                    "functionName": "histogram",
+                    "sortBy": "ASC",
+                    "args": [
+                      {
+                        "type": "field",
+                        "value": {
+                          "field": "_timestamp",
+                          "streamAlias": null
+                        }
+                      },
+                      {
+                        "type": "histogramInterval"
+                      }
+                    ],
+                    "isDerived": false,
+                    "havingConditions": [],
+                    "treatAsNonTimestamp": true,
+                    "showFieldAsJson": false
+                  }
+                ],
+                "y": [
+                  {
+                    "label": "_timestamp",
+                    "alias": "y_axis_1",
+                    "column": "y_axis_1",
+                    "type": "build",
+                    "color": null,
+                    "functionName": "count",
+                    "args": [
+                      {
+                        "type": "field",
+                        "value": {
+                          "field": "_timestamp",
+                          "streamAlias": null
+                        }
+                      }
+                    ],
+                    "isDerived": false,
+                    "havingConditions": [],
+                    "treatAsNonTimestamp": true,
+                    "showFieldAsJson": false
+                  }
+                ],
+                "z": [],
+                "breakdown": [],
+                "filter": {
+                  "filterType": "group",
+                  "logicalOperator": "AND",
+                  "conditions": []
+                }
+              },
+              "config": {
+                "promql_legend": "",
+                "layer_type": "scatter",
+                "weight_fixed": 1.0,
+                "limit": 0.0,
+                "min": 0.0,
+                "max": 100.0,
+                "time_shift": [],
+                "query_label": ""
+              },
+              "joins": []
+            }
+          ],
+          "layout": {
+            "x": 96,
+            "y": 0,
+            "w": 96,
+            "h": 18,
+            "i": 2
+          },
+          "htmlContent": "",
+          "markdownContent": "",
+          "customChartContent": " // To know more about ECharts , \n// visit: https://echarts.apache.org/examples/en/index.html \n// Example: https://echarts.apache.org/examples/en/editor.html?c=line-simple \n// Define your ECharts 'option' here. \n// 'data' variable is available for use and contains the response data from the search result and it is an array.\noption = {  \n \n};\n  "
+        },
+        {
+          "id": "Panel_ID9161610",
+          "type": "stacked",
+          "title": "Success and Errors",
+          "description": "",
+          "config": {
+            "show_legends": true,
+            "legends_position": null,
+            "decimals": 2.0,
+            "line_thickness": 1.5,
+            "step_value": "0",
+            "top_results_others": false,
+            "axis_border_show": false,
+            "label_option": {
+              "rotate": 0.0
+            },
+            "axis_label_rotate": 0.0,
+            "show_symbol": false,
+            "line_interpolation": "smooth",
+            "legend_width": {
+              "unit": "px"
+            },
+            "legend_height": {
+              "unit": "px"
+            },
+            "base_map": {
+              "type": "osm"
+            },
+            "map_type": {
+              "type": "world"
+            },
+            "map_view": {
+              "zoom": 1.0,
+              "lat": 0.0,
+              "lng": 0.0
+            },
+            "map_symbol_style": {
+              "size": "by Value",
+              "size_by_value": {
+                "min": 1.0,
+                "max": 100.0
+              },
+              "size_fixed": 2.0
+            },
+            "drilldown": [],
+            "mark_line": [],
+            "override_config": [],
+            "connect_nulls": false,
+            "no_value_replacement": "",
+            "wrap_table_cells": false,
+            "table_transpose": false,
+            "table_dynamic_columns": false,
+            "mappings": [],
+            "color": {
+              "mode": "palette-classic-by-series",
+              "fixedColor": [
+                "#53ca53"
+              ],
+              "seriesBy": "last",
+              "colorBySeries": []
+            },
+            "trellis": {
+              "layout": null,
+              "num_of_columns": 1,
+              "group_by_y_axis": false
+            },
+            "show_gridlines": true,
+            "aggregation": "last",
+            "lat_label": "latitude",
+            "lon_label": "longitude",
+            "weight_label": "weight",
+            "name_label": "name",
+            "table_aggregations": [
+              "last"
+            ],
+            "promql_table_mode": "single",
+            "visible_columns": [],
+            "hidden_columns": [],
+            "sticky_columns": [],
+            "sticky_first_column": false,
+            "column_order": [],
+            "table_pagination": false,
+            "table_filtering": false,
+            "table_pivot_show_row_totals": false,
+            "table_pivot_show_col_totals": false,
+            "table_pivot_sticky_row_totals": false,
+            "table_pivot_sticky_col_totals": false,
+            "panel_time_enabled": false,
+            "show_exemplars": false
+          },
+          "queryType": "sql",
+          "queries": [
+            {
+              "query": "SELECT histogram(_timestamp) AS x_axis,\n       regexp_match(log, 'outcome=(\\w+)')[1] AS outcome,\n       count(*) AS interactions\nFROM fintracker_bot\nWHERE log LIKE '%bot.usage: event=%'\nGROUP BY x_axis, outcome\nORDER BY x_axis",
+              "vrlFunctionQuery": "",
+              "customQuery": true,
+              "fields": {
+                "stream": "fintracker_bot",
+                "stream_type": "logs",
+                "x": [
+                  {
+                    "label": "x_axis",
+                    "alias": "x_axis",
+                    "type": "build",
+                    "color": null,
+                    "args": [
+                      {
+                        "type": "field",
+                        "value": {
+                          "field": "x_axis",
+                          "streamAlias": null
+                        }
+                      }
+                    ],
+                    "isDerived": false,
+                    "havingConditions": [],
+                    "treatAsNonTimestamp": true,
+                    "showFieldAsJson": false
+                  }
+                ],
+                "y": [
+                  {
+                    "label": "interactions",
+                    "alias": "interactions",
+                    "type": "build",
+                    "color": "#5960b2",
+                    "functionName": "count",
+                    "args": [
+                      {
+                        "type": "field",
+                        "value": {
+                          "field": "interactions",
+                          "streamAlias": null
+                        }
+                      }
+                    ],
+                    "isDerived": false,
+                    "havingConditions": [],
+                    "treatAsNonTimestamp": true,
+                    "showFieldAsJson": false
+                  }
+                ],
+                "z": [],
+                "breakdown": [
+                  {
+                    "label": "outcome",
+                    "alias": "outcome",
+                    "type": "build",
+                    "color": null,
+                    "args": [
+                      {
+                        "type": "field",
+                        "value": {
+                          "field": "outcome",
+                          "streamAlias": null
+                        }
+                      }
+                    ],
+                    "isDerived": false,
+                    "havingConditions": []
+                  }
+                ],
+                "filter": {
+                  "filterType": "group",
+                  "logicalOperator": "AND",
+                  "conditions": []
+                }
+              },
+              "config": {
+                "promql_legend": "",
+                "layer_type": "scatter",
+                "weight_fixed": 1.0,
+                "limit": 0.0,
+                "min": 0.0,
+                "max": 100.0,
+                "time_shift": [],
+                "query_label": ""
+              },
+              "joins": []
+            }
+          ],
+          "layout": {
+            "x": 0,
+            "y": 20,
+            "w": 96,
+            "h": 18,
+            "i": 3
+          },
+          "htmlContent": "",
+          "markdownContent": "",
+          "customChartContent": " // To know more about ECharts , \n// visit: https://echarts.apache.org/examples/en/index.html \n// Example: https://echarts.apache.org/examples/en/editor.html?c=line-simple \n// Define your ECharts 'option' here. \n// 'data' variable is available for use and contains the response data from the search result and it is an array.\noption = {  \n \n};\n  "
+        },
+        {
+          "id": "Panel_ID7241510",
+          "type": "table",
+          "title": "Bot Commands",
+          "description": "",
+          "config": {
+            "show_legends": true,
+            "legends_position": null,
+            "decimals": 2.0,
+            "line_thickness": 1.5,
+            "step_value": "0",
+            "top_results_others": false,
+            "axis_border_show": false,
+            "label_option": {
+              "rotate": 0.0
+            },
+            "axis_label_rotate": 0.0,
+            "show_symbol": false,
+            "line_interpolation": "smooth",
+            "legend_width": {
+              "unit": "px"
+            },
+            "legend_height": {
+              "unit": "px"
+            },
+            "base_map": {
+              "type": "osm"
+            },
+            "map_type": {
+              "type": "world"
+            },
+            "map_view": {
+              "zoom": 1.0,
+              "lat": 0.0,
+              "lng": 0.0
+            },
+            "map_symbol_style": {
+              "size": "by Value",
+              "size_by_value": {
+                "min": 1.0,
+                "max": 100.0
+              },
+              "size_fixed": 2.0
+            },
+            "drilldown": [],
+            "mark_line": [],
+            "override_config": [],
+            "connect_nulls": false,
+            "no_value_replacement": "",
+            "wrap_table_cells": false,
+            "table_transpose": false,
+            "table_dynamic_columns": false,
+            "mappings": [],
+            "color": {
+              "mode": "palette-classic-by-series",
+              "fixedColor": [
+                "#53ca53"
+              ],
+              "seriesBy": "last",
+              "colorBySeries": []
+            },
+            "trellis": {
+              "layout": null,
+              "num_of_columns": 1,
+              "group_by_y_axis": false
+            },
+            "show_gridlines": true,
+            "aggregation": "last",
+            "lat_label": "latitude",
+            "lon_label": "longitude",
+            "weight_label": "weight",
+            "name_label": "name",
+            "table_aggregations": [
+              "last"
+            ],
+            "promql_table_mode": "single",
+            "visible_columns": [],
+            "hidden_columns": [],
+            "sticky_columns": [],
+            "sticky_first_column": false,
+            "column_order": [],
+            "table_pagination": false,
+            "table_pivot_show_row_totals": false,
+            "table_pivot_show_col_totals": false,
+            "table_pivot_sticky_row_totals": false,
+            "table_pivot_sticky_col_totals": false,
+            "panel_time_enabled": false,
+            "show_exemplars": false
+          },
+          "queryType": "sql",
+          "queries": [
+            {
+              "query": "SELECT regexp_match(log, 'event=(\\w+)')[1] AS event,\n       count(*) AS total,\n       sum(CASE WHEN log LIKE '%outcome=error%' THEN 1 ELSE 0 END) AS errors,\n       round(avg(CAST(regexp_match(log, 'duration_ms=(\\d+)')[1] AS BIGINT))) AS avg_ms,\n       approx_percentile_cont(CAST(regexp_match(log, 'duration_ms=(\\d+)')[1] AS BIGINT), 0.95) AS p95_ms\nFROM fintracker_bot\nWHERE log LIKE '%bot.usage: event=%'\nGROUP BY event\nORDER BY total DESC",
+              "vrlFunctionQuery": "",
+              "customQuery": true,
+              "fields": {
+                "stream": "fintracker_bot",
+                "stream_type": "logs",
+                "x": [
+                  {
+                    "label": "event",
+                    "alias": "event",
+                    "type": "build",
+                    "color": null,
+                    "args": [
+                      {
+                        "type": "field",
+                        "value": {
+                          "field": "event",
+                          "streamAlias": null
+                        }
+                      }
+                    ],
+                    "isDerived": true,
+                    "havingConditions": [],
+                    "treatAsNonTimestamp": true,
+                    "showFieldAsJson": false
+                  }
+                ],
+                "y": [
+                  {
+                    "label": "total",
+                    "alias": "total",
+                    "type": "build",
+                    "color": "#5960b2",
+                    "args": [
+                      {
+                        "type": "field",
+                        "value": {
+                          "field": "total",
+                          "streamAlias": null
+                        }
+                      }
+                    ],
+                    "isDerived": true,
+                    "havingConditions": [],
+                    "treatAsNonTimestamp": true,
+                    "showFieldAsJson": false
+                  },
+                  {
+                    "label": "errors",
+                    "alias": "errors",
+                    "type": "build",
+                    "color": "#c23531",
+                    "args": [
+                      {
+                        "type": "field",
+                        "value": {
+                          "field": "errors",
+                          "streamAlias": null
+                        }
+                      }
+                    ],
+                    "isDerived": true,
+                    "havingConditions": [],
+                    "treatAsNonTimestamp": true,
+                    "showFieldAsJson": false
+                  },
+                  {
+                    "label": "avg_ms",
+                    "alias": "avg_ms",
+                    "type": "build",
+                    "color": "#2f4554",
+                    "args": [
+                      {
+                        "type": "field",
+                        "value": {
+                          "field": "avg_ms",
+                          "streamAlias": null
+                        }
+                      }
+                    ],
+                    "isDerived": true,
+                    "havingConditions": [],
+                    "treatAsNonTimestamp": true,
+                    "showFieldAsJson": false
+                  },
+                  {
+                    "label": "p95_ms",
+                    "alias": "p95_ms",
+                    "type": "build",
+                    "color": "#61a0a8",
+                    "args": [
+                      {
+                        "type": "field",
+                        "value": {
+                          "field": "p95_ms",
+                          "streamAlias": null
+                        }
+                      }
+                    ],
+                    "isDerived": true,
+                    "havingConditions": [],
+                    "treatAsNonTimestamp": true,
+                    "showFieldAsJson": false
+                  }
+                ],
+                "z": [],
+                "breakdown": [],
+                "filter": {
+                  "filterType": "group",
+                  "logicalOperator": "AND",
+                  "conditions": []
+                }
+              },
+              "config": {
+                "promql_legend": "",
+                "layer_type": "scatter",
+                "weight_fixed": 1.0,
+                "limit": 0.0,
+                "min": 0.0,
+                "max": 100.0,
+                "time_shift": [],
+                "query_label": ""
+              },
+              "joins": []
+            }
+          ],
+          "layout": {
+            "x": 96,
+            "y": 20,
+            "w": 96,
+            "h": 18,
+            "i": 4
+          },
+          "htmlContent": "",
+          "markdownContent": "",
+          "customChartContent": " // To know more about ECharts , \n// visit: https://echarts.apache.org/examples/en/index.html \n// Example: https://echarts.apache.org/examples/en/editor.html?c=line-simple \n// Define your ECharts 'option' here. \n// 'data' variable is available for use and contains the response data from the search result and it is an array.\noption = {  \n \n};\n  "
+        }
+      ]
+    }
+  ],
+  "variables": {
+    "list": [],
+    "showDynamicFilters": true
+  },
+  "defaultDatetimeDuration": {
+    "type": "relative",
+    "relativeTimePeriod": "1d",
+    "startTime": 1793990081687000,
+    "endTime": 1794076481687000
+  }
+}
