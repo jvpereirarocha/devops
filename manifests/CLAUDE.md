@@ -49,11 +49,11 @@ The cluster is organized into these namespaces:
 | `cicd-system` | ArgoCD (Kustomize) + resource quota/limit range |
 | `databases` | PostgreSQL StatefulSet (fintracker app DB) |
 | `homepage` | [Homepage](https://gethomepage.dev) dashboard |
-| `metallb-system` | MetalLB L2 pool `192.168.18.2–192.168.18.200` |
+| `metallb-system` | MetalLB L2 pool `192.168.18.2–192.168.18.6` + `192.168.18.8–192.168.18.200` (`.7` is the node) |
 | `observability` | Prometheus + Grafana |
 | `github-actions` | Self-hosted GitHub Actions runner |
 
-**MetalLB** provides LoadBalancer IPs from the local LAN range. Services that need a stable LAN IP use `type: LoadBalancer` (e.g., Grafana at `.5`, Prometheus at `.6`).
+**MetalLB** provides LoadBalancer IPs from the local LAN range. Services that need a stable LAN IP use `type: LoadBalancer` (e.g., Grafana at `.5`, Prometheus at `.6`). The pool skips `192.168.18.7`, the k3s node IP, so MetalLB never hands it to a Service.
 
 **Prometheus** uses Kubernetes service-discovery (`role: service`) and only scrapes services annotated with `prometheus.io/scrape: "true"`. To expose a new service to Prometheus, add that annotation along with `prometheus.io/port` and optionally `prometheus.io/path`.
 
