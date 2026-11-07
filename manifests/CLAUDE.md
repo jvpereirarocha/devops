@@ -50,7 +50,7 @@ The cluster is organized into these namespaces:
 | `databases` | PostgreSQL StatefulSet (fintracker app DB) |
 | `homepage` | [Homepage](https://gethomepage.dev) dashboard |
 | `metallb-system` | MetalLB L2 pool `192.168.18.2–192.168.18.6` + `192.168.18.8–192.168.18.200` (`.7` is the node) |
-| `observability` | Prometheus + Grafana |
+| `observability` | Prometheus + Grafana + OpenObserve (logs) |
 | `github-actions` | Self-hosted GitHub Actions runner |
 
 **MetalLB** provides LoadBalancer IPs from the local LAN range. Services that need a stable LAN IP use `type: LoadBalancer` (e.g., Grafana at `.5`, Prometheus at `.6`). The pool skips `192.168.18.7`, the k3s node IP, so MetalLB never hands it to a Service.
@@ -58,6 +58,14 @@ The cluster is organized into these namespaces:
 **Prometheus** uses Kubernetes service-discovery (`role: service`) and only scrapes services annotated with `prometheus.io/scrape: "true"`. To expose a new service to Prometheus, add that annotation along with `prometheus.io/port` and optionally `prometheus.io/path`.
 
 **Homepage** cards come from the static `services.yaml` in `homepage/configmap.yaml`. To add a service, add an entry there, apply the ConfigMap and run `kubectl rollout restart deployment/homepage -n homepage` (the config files are mounted with `subPath`, so ConfigMap updates are not picked up without a restart). Homepage auto-discovery only works with `gethomepage.dev/*` annotations on **Ingress** objects, not on Services: the annotations on the Grafana and Prometheus Services have no effect.
+
+**OpenObserve** (`observability/open-observe/`) is the log backend: a single-replica StatefulSet in local mode (data and SQLite metadata on the `data-openobserve-0` local-path PVC), `openobserve/openobserve` pinned version. In-cluster clients send logs to `openobserve.observability.svc:5080` (HTTP) or `:5081` (OTLP gRPC); the UI is behind the Traefik Ingress at `openobserve.local.lan` / `openobserve.local`. local-path does not enforce PVC size, so `ZO_COMPACT_DATA_RETENTION_DAYS` (7) is the real disk limit. The admin credentials live in the `openobserve-secret` Secret, created manually before applying:
+```bash
+kubectl create secret generic openobserve-secret -n observability \
+  --from-literal=ZO_ROOT_USER_EMAIL=<EMAIL> \
+  --from-literal=ZO_ROOT_USER_PASSWORD=<PASSWORD>
+```
+Deleting the StatefulSet keeps the PVC; delete `data-openobserve-0` explicitly to wipe the data.
 
 **GitHub runner** (`pipeline/github-runner/deployment.yaml`) mounts the host Docker socket and uses a PAT stored in a secret. The secret must be created manually before applying the deployment:
 ```bash

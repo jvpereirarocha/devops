@@ -1,0 +1,32 @@
+# Web UI through Traefik. openobserve.local.lan resolves via the router DNS (used by the
+# homepage); openobserve.local is for machines that use /etc/hosts.
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: openobserve
+  namespace: observability
+  # No gethomepage.dev annotations: the card is static in homepage/configmap.yaml,
+  # and auto-discovery on this Ingress would show it twice.
+spec:
+  ingressClassName: traefik
+  rules:
+    - host: openobserve.local.lan
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: openobserve
+                port:
+                  name: http
+    - host: openobserve.local
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: openobserve
+                port:
+                  name: http

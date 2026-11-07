@@ -1,0 +1,87 @@
+# OpenObserve in single-node "local" mode: data on disk, metadata in SQLite.
+# A StatefulSet (not a Deployment) guarantees at most one pod writes the volume at a time.
+# The admin credentials come from the openobserve-secret Secret, created outside git:
+#   kubectl create secret generic openobserve-secret -n observability \
+#     --from-literal=ZO_ROOT_USER_EMAIL=<ADMIN_EMAIL> \
+#     --from-literal=ZO_ROOT_USER_PASSWORD=<ADMIN_PASSWORD>
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: openobserve
+  namespace: observability
+  labels:
+    app: openobserve
+spec:
+  serviceName: openobserve
+  replicas: 1
+  selector:
+    matchLabels:
+      app: openobserve
+  template:
+    metadata:
+      labels:
+        app: openobserve
+    spec:
+      securityContext:
+        runAsUser: 10001
+        runAsGroup: 10001
+        fsGroup: 10001
+        runAsNonRoot: true
+      containers:
+        - name: openobserve
+          image: openobserve/openobserve:v1.1.2
+          ports:
+            - name: http
+              containerPort: 5080
+            - name: grpc
+              containerPort: 5081
+          env:
+            - name: ZO_DATA_DIR
+              value: /data
+            - name: ZO_LOCAL_MODE
+              value: "true"
+            # local-path does not enforce the PVC size, so retention is the real disk limit.
+            - name: ZO_COMPACT_DATA_RETENTION_DAYS
+              value: "7"
+            # Keep the in-memory caches (in MB) well below the container memory limit.
+            - name: ZO_MEMORY_CACHE_MAX_SIZE
+              value: "256"
+            - name: ZO_MEMORY_CACHE_DATAFUSION_MAX_SIZE
+              value: "256"
+            - name: ZO_TELEMETRY
+              value: "false"
+          envFrom:
+            - secretRef:
+                name: openobserve-secret
+          resources:
+            requests:
+              cpu: 100m
+              memory: 256Mi
+            limits:
+              cpu: "1"
+              memory: 1Gi
+          readinessProbe:
+            httpGet:
+              path: /healthz
+              port: http
+            initialDelaySeconds: 10
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /healthz
+              port: http
+            initialDelaySeconds: 30
+            periodSeconds: 20
+            failureThreshold: 5
+          volumeMounts:
+            - name: data
+              mountPath: /data
+  volumeClaimTemplates:
+    - metadata:
+        name: data
+      spec:
+        accessModes: ["ReadWriteOnce"]
+        storageClassName: local-path
+        resources:
+          requests:
+            storage: 5Gi

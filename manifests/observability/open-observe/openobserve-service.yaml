@@ -1,0 +1,24 @@
+# ClusterIP: apps inside the cluster send logs to openobserve.observability.svc:5080;
+# the web UI is reached through the Traefik Ingress (openobserve-ingress.yaml).
+apiVersion: v1
+kind: Service
+metadata:
+  name: openobserve
+  namespace: observability
+  labels:
+    app: openobserve
+  annotations:
+    prometheus.io/scrape: "true"
+    prometheus.io/port: "5080"
+    prometheus.io/path: "/metrics"
+spec:
+  type: ClusterIP
+  selector:
+    app: openobserve
+  ports:
+    - name: http
+      port: 5080
+      targetPort: http
+    - name: grpc
+      port: 5081
+      targetPort: grpc

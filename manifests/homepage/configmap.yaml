@@ -33,6 +33,10 @@ data:
             icon: si-argo
             href: http://argocd.local.lan
             description: GitOps / Continuous Delivery
+        - OpenObserve:
+            icon: openobserve.png
+            href: http://openobserve.local.lan
+            description: Logs
   widgets.yaml: |
     - resources:
         backend: kubernetes

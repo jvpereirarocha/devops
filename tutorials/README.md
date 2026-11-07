@@ -13,3 +13,4 @@ Problems found along the way are recorded in [`../troubleshooting/`](../troubles
 ## Index
 
 - [How to deploy ArgoCD on the Kubernetes cluster](how-to-deploy-argocd-on-the-kubernetes-cluster.md): install ArgoCD with Kustomize in a namespace with a ResourceQuota, expose it through Traefik and create the first Application.
+- [How to deploy OpenObserve on the Kubernetes cluster](how-to-deploy-openobserve-on-the-kubernetes-cluster.md): run OpenObserve in local mode as a StatefulSet, expose its UI through Traefik, scrape it with Prometheus and verify log ingestion end to end.
