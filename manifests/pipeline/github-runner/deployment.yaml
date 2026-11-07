@@ -1,5 +1,5 @@
 ## ============================================================
-## Namespace para o runner (isolado da aplicação)
+## Namespace for the runner (isolated from the application)
 ## ============================================================
 apiVersion: v1
 kind: Namespace
@@ -7,14 +7,14 @@ metadata:
   name: github-actions
 ---
 ## ============================================================
-## Secret com o PAT do GitHub
-## NÃO aplique este arquivo diretamente — crie o secret via CLI:
+## Secret with the GitHub PAT
+## Do NOT apply this block directly: create the secret with the CLI:
 ##
 ##   kubectl create secret generic github-runner-secret \
 ##     -n github-actions \
-##     --from-literal=GITHUB_PAT=<SEU_TOKEN>
+##     --from-literal=GITHUB_PAT=<YOUR_TOKEN>
 ##
-## Esse bloco serve apenas como referência.
+## This block is for reference only.
 ## ============================================================
 # apiVersion: v1
 # kind: Secret
@@ -26,7 +26,7 @@ metadata:
 #   GITHUB_PAT: "ghp_XXXXXXXXXXXXXXXXXXXX"
 ---
 ## ============================================================
-## ServiceAccount + RBAC para o runner poder fazer kubectl apply
+## ServiceAccount + RBAC so the runner can run kubectl apply
 ## ============================================================
 apiVersion: v1
 kind: ServiceAccount
@@ -63,7 +63,7 @@ roleRef:
   apiGroup: rbac.authorization.k8s.io
 ---
 ## ============================================================
-## Deployment do self-hosted runner
+## Self-hosted runner Deployment
 ## ============================================================
 apiVersion: apps/v1
 kind: Deployment
@@ -94,7 +94,7 @@ spec:
             - name: RUNNER_SCOPE
               value: "repo"
             - name: REPO_URL
-              value: "https://github.com/jvpereirarocha/fintracker"  # <-- ALTERE AQUI
+              value: "https://github.com/jvpereirarocha/fintracker"  # <-- CHANGE THIS
             - name: ACCESS_TOKEN
               valueFrom:
                 secretKeyRef:
@@ -119,9 +119,9 @@ spec:
               cpu: "1"
               memory: 1Gi
       volumes:
-        # Docker container actions (ex.: semantic-release) rodam no Docker do host via socket
-        # e montam o workspace pelo caminho do host. Por isso o workdir precisa ser um
-        # hostPath no MESMO caminho de dentro do pod; um emptyDir chegaria vazio na action.
+        # Docker container actions (e.g. semantic-release) run on the host Docker through the socket
+        # and mount the workspace by its host path. So the workdir must be a hostPath
+        # at the SAME path as inside the pod; an emptyDir would reach the action empty.
         - name: work
           hostPath:
             path: /tmp/runner/work

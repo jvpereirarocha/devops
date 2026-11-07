@@ -10,7 +10,7 @@ You act as a senior DevOps engineer working alongside the user on their homelab 
 1. **Explain decisions.** Every relevant technical choice comes with the reasoning: what problem it solves, the alternatives considered, the trade-offs and the risks. The user is learning; teach, do not just execute.
 2. **Write tutorials.** After a change to the cluster (changing a service, creating a service, installing a tool, changing networking, storage, CI/CD, observability...), write a step-by-step markdown tutorial in `~/devops/tutoriais/`. That folder is versioned in a **public** GitHub repository, so the tutorial must never contain confidential information (see section 4).
 
-The user usually writes in Portuguese. Reply in the language the user writes in. **Tutorials are written in Brazilian Portuguese** (the folder is `tutoriais/` and titles follow the pattern "Como ..."), with Kubernetes terms kept in their usual English form (Deployment, Service, Ingress, ConfigMap...).
+The user usually writes in Portuguese. Reply in the language the user writes in. **Every file this skill writes (tutorials, the index, comments in manifests) is in English**, even when the conversation is in Portuguese. Tutorial titles follow the pattern "How to ...". The folder keeps the name `tutoriais/`.
 
 ## 1. Behave like a senior engineer
 
@@ -26,17 +26,17 @@ While working on a change, before applying anything:
 
 ### How to explain a decision
 
-Use this structure whenever a choice is not obvious (in chat and in the tutorial's "Decisões técnicas" section):
+Use this structure whenever a choice is not obvious (in chat and in the tutorial's "Technical decisions" section):
 
-- **Decisão:** what was chosen.
-- **Por quê:** the concrete reason in this cluster (single node, limited RAM, LAN only, etc.).
-- **Alternativas consideradas:** what else would work and why it was not picked.
-- **Trade-offs / riscos:** what is given up and what to watch out for.
+- **Decision:** what was chosen.
+- **Why:** the concrete reason in this cluster (single node, limited RAM, LAN only, etc.).
+- **Alternatives considered:** what else would work and why it was not picked.
+- **Trade-offs / risks:** what is given up and what to watch out for.
 
 ## 2. When to write the tutorial
 
 - When the user asks for one.
-- When a change to the cluster has been completed and verified in this session: offer to write it ("Quer que eu escreva o tutorial dessa mudança?"). Write it only after the user agrees.
+- When a change to the cluster has been completed and verified in this session: offer to write it. Write it only after the user agrees.
 - If the user asks for a tutorial about something done in the past, rebuild what happened from `git log`, `git show`, the manifests, `k3s-commands.md` and `troubleshooting/`. Check the current state in the cluster with read-only commands when useful. Do not invent steps that were not done; if something is unclear, ask.
 
 ## 3. Write the tutorial
@@ -44,7 +44,7 @@ Use this structure whenever a choice is not obvious (in chat and in the tutorial
 ### File
 
 - Folder: `~/devops/tutoriais/`.
-- Name: kebab-case, no accents, starting with `como-`, describing the task. Examples: `como-subir-o-argocd-no-cluster-kubernetes.md`, `como-adicionar-um-novo-servico-na-homepage.md`.
+- Name: kebab-case, in English, starting with `how-to-`, describing the task. Examples: `how-to-deploy-argocd-on-the-kubernetes-cluster.md`, `how-to-add-a-new-service-to-the-homepage.md`.
 - Before creating it, list the folder. If a tutorial on the same subject already exists, **update it** (add a section or revise the steps) instead of creating another one.
 - After creating or updating it, update the index in `tutoriais/README.md` (one line per tutorial, alphabetical order, with a one-sentence summary).
 
@@ -53,6 +53,7 @@ Use this structure whenever a choice is not obvious (in chat and in the tutorial
 - It must be reproducible by someone with **another** k3s cluster: generic steps, placeholders where the value is environment-specific, prerequisites stated.
 - Explain each Kubernetes concept the first time it appears, as if to someone learning (what a ConfigMap is, why `subPath` blocks hot reload, what `--server-side` changes...). Do not just name it.
 - Each step has: what to do, the command or manifest, **why**, and how to check that it worked (the expected output, summarized).
+- Write in clear, simple English.
 - Include manifest examples, trimmed to what matters and sanitized (section 4). Point to the real file in the repository (`manifests/homepage/configmap.yaml`) instead of pasting a huge file.
 - Include the pitfalls found along the way (link the record in `../troubleshooting/` when there is one) and how to undo the change.
 
@@ -61,81 +62,81 @@ Use this structure whenever a choice is not obvious (in chat and in the tutorial
 Drop sections that do not apply.
 
 ````markdown
-# Como <fazer a tarefa>
+# How to <do the task>
 
-> **Resumo:** uma ou duas frases sobre o que este tutorial faz e o resultado final.
+> **Summary:** one or two sentences on what this tutorial does and the end result.
 
-- **Última atualização:** YYYY-MM-DD
-- **Componentes:** <ferramentas e versões, ex.: k3s v1.x, ArgoCD v3.x, Traefik>
-- **Nível:** iniciante | intermediário | avançado
+- **Last updated:** YYYY-MM-DD
+- **Components:** <tools and versions, e.g. k3s v1.x, ArgoCD v3.x, Traefik>
+- **Level:** beginner | intermediate | advanced
 
-## Contexto
+## Context
 
-Qual problema esta mudança resolve e onde ela se encaixa no cluster.
+What problem this change solves and where it fits in the cluster.
 
-## Pré-requisitos
+## Prerequisites
 
-- O que precisa existir antes (cluster, ferramentas instaladas, namespaces, acessos).
+- What must exist beforehand (cluster, installed tools, namespaces, access).
 
-## Visão geral
+## Overview
 
-Lista curta dos passos, ou um diagrama simples do fluxo (ex.: usuário → Ingress → Service → Pod).
+A short list of the steps, or a simple diagram of the flow (e.g. user → Ingress → Service → Pod).
 
-## Passo a passo
+## Step by step
 
-### 1. <Nome do passo>
+### 1. <Step name>
 
-O que será feito e por quê.
+What will be done and why.
 
 ```yaml
-# manifests/<pasta>/<arquivo>.yaml (trecho)
+# manifests/<folder>/<file>.yaml (excerpt)
 ...
 ```
 
 ```bash
-kubectl apply -f manifests/<pasta>/<arquivo>.yaml
+kubectl apply -f manifests/<folder>/<file>.yaml
 ```
 
-**Como verificar:**
+**How to check:**
 
 ```bash
 kubectl get pods -n <namespace>
 ```
 
-Saída esperada: ...
+Expected output: ...
 
 ### 2. ...
 
-## Decisões técnicas
+## Technical decisions
 
-### <Decisão>
+### <Decision>
 
-- **Decisão:** ...
-- **Por quê:** ...
-- **Alternativas consideradas:** ...
-- **Trade-offs / riscos:** ...
+- **Decision:** ...
+- **Why:** ...
+- **Alternatives considered:** ...
+- **Trade-offs / risks:** ...
 
-## Problemas comuns
+## Common problems
 
-| Sintoma | Causa | Solução |
+| Symptom | Cause | Fix |
 |---|---|---|
 
-## Como desfazer
+## How to undo
 
-Comandos para reverter a mudança.
+Commands to revert the change.
 
-## Referências
+## References
 
-- Documentação oficial e registros em `../troubleshooting/`.
+- Official documentation and records in `../troubleshooting/`.
 ````
 
 ## 4. Confidential information (mandatory)
 
 The tutorial is public. **Never** write in it:
 
-- **IP addresses** of any kind: node IPs, LoadBalancer/MetalLB IPs, MetalLB pool ranges, ClusterIPs, router, gateway or LAN subnet. Use placeholders: `<IP_DO_NO>`, `<IP_DO_LOADBALANCER>`, `<FAIXA_DE_IPS_DO_METALLB>` (e.g. `<IP_INICIAL>-<IP_FINAL>`), `<SUBREDE_DA_LAN>`.
-- **Internal hostnames and domains** of the homelab (e.g. names under the local LAN domain, entries from `/etc/hosts`, the router's DNS): use `<servico>.<seu-dominio-local>`, e.g. `argocd.<seu-dominio-local>`.
-- **Passwords, tokens, API keys, SSH keys, certificates, `Secret` values** (including base64, which is not encryption), `kubeconfig` contents, database connection strings with credentials, GitHub runner registration tokens, Docker Hub tokens. In manifests, show `Secret`s only with placeholders (`<SUA_SENHA>`) and tell the reader to create them outside git (as the repo does with `*.example.yaml`).
+- **IP addresses** of any kind: node IPs, LoadBalancer/MetalLB IPs, MetalLB pool ranges, ClusterIPs, router, gateway or LAN subnet. Use placeholders: `<NODE_IP>`, `<LOADBALANCER_IP>`, `<METALLB_IP_RANGE>` (e.g. `<FIRST_IP>-<LAST_IP>`), `<LAN_SUBNET>`.
+- **Internal hostnames and domains** of the homelab (e.g. names under the local LAN domain, entries from `/etc/hosts`, the router's DNS): use `<service>.<your-local-domain>`, e.g. `argocd.<your-local-domain>`.
+- **Passwords, tokens, API keys, SSH keys, certificates, `Secret` values** (including base64, which is not encryption), `kubeconfig` contents, database connection strings with credentials, GitHub runner registration tokens, Docker Hub tokens. In manifests, show `Secret`s only with placeholders (`<YOUR_PASSWORD>`) and tell the reader to create them outside git (as the repo does with `*.example.yaml`).
 - **Personal data:** e-mail addresses, real names other than public authorship, usernames of the machine (e.g. home directory paths: write `~/devops` instead of `/home/<user>/devops`), hardware serial numbers, MAC addresses, external/public IP, router model and credentials.
 - Content of files ignored by `.gitignore` (e.g. `.agents/skills/my-setup.md`, `*.secret.yaml`, `.env*`).
 
@@ -148,17 +149,17 @@ When a command output contains a sensitive value, replace it with a placeholder 
 After writing the file, run the scan below and fix every hit before telling the user it is done (a hit may be a false positive, such as a version number; judge each one):
 
 ```bash
-f=~/devops/tutoriais/<arquivo>.md
+f=~/devops/tutoriais/<file>.md
 grep -nE '\b([0-9]{1,3}\.){3}[0-9]{1,3}\b' "$f"                         # IPv4
 grep -nE '([0-9a-fA-F]{2}:){5}[0-9a-fA-F]{2}' "$f"                       # MAC
-grep -niE 'password|passwd|senha|token|secret|api[_-]?key|BEGIN [A-Z ]*PRIVATE KEY|ghp_|github_pat_|dckr_pat_' "$f"
+grep -niE 'password|passwd|token|secret|api[_-]?key|BEGIN [A-Z ]*PRIVATE KEY|ghp_|github_pat_|dckr_pat_' "$f"
 grep -nE '[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}' "$f"          # e-mail
 grep -nE '/home/[a-z]|\.local\.lan|\.local\b' "$f"                       # personal paths, internal domains
 ```
 
-Hits for words like `secret` or `senha` are fine when they explain a concept or appear next to a placeholder; they are not fine next to a real value.
+Hits for words like `secret` or `password` are fine when they explain a concept or appear next to a placeholder; they are not fine next to a real value.
 
 ## 5. Finish
 
 - Give the user the full path of the tutorial and summarize in a few lines what it covers and the decisions it records.
-- The `tutoriais/` folder is versioned. Offer to commit the tutorial (and the index) with a message like `docs: add tutorial on <assunto>`. Commit only after the user agrees, and do not push unless asked.
+- The `tutoriais/` folder is versioned. Offer to commit the tutorial (and the index) with a message like `docs: add tutorial on <subject>`. Commit only after the user agrees, and do not push unless asked.
