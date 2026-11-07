@@ -1,92 +1,94 @@
 ---
 name: k8s-troubleshoot
-description: Conduz a resolução de um problema reportado no homelab (cluster k3s) e, quando o problema é resolvido, registra o incidente em detalhes em ~/devops/troubleshooting. Use sempre que o usuário reportar um problema ou erro na infra, por exemplo "tenho um problema", "está dando erro", "não funciona", "o pod não sobe", "o serviço sumiu", "me ajude a resolver", ou pedir para registrar/documentar um problema já resolvido.
+description: Guides the resolution of a problem reported in the homelab (k3s cluster) and, once it is resolved, writes a detailed incident record in ~/devops/troubleshooting. Use whenever the user reports a problem or error in the infrastructure, for example "I have a problem", "it's throwing an error", "it doesn't work", "the pod won't start", "the service is gone", "help me fix this" (or the same in Portuguese: "tenho um problema", "está dando erro", "não funciona", "o pod não sobe", "o serviço sumiu", "me ajude a resolver"), or asks to record/document a problem that was already solved.
 ---
 
-# Troubleshooting com registro do incidente
+# Troubleshooting with an incident record
 
-Objetivo: resolver o problema que o usuário reportou e, no fim, deixar um registro em markdown em `~/devops/troubleshooting/`. Essa pasta é versionada no GitHub e é o histórico dos problemas enfrentados até a infra ficar 100% funcional.
+Goal: solve the problem the user reported and, at the end, leave a markdown record in `~/devops/troubleshooting/`. That folder is versioned on GitHub and is the history of the problems faced on the way to a 100% working infrastructure.
 
-## 1. Perguntar o namespace e a descrição
+The user often writes in Portuguese. Understand reports in either language, and reply in the language the user writes in. Files written by this skill are always in English.
 
-Sempre comece perguntando duas coisas, antes de rodar qualquer comando:
+## 1. Ask for the namespace and a description
 
-1. **Em qual namespace** está o problema.
-2. **Uma breve descrição** do problema: o que acontece e o que deveria acontecer.
+Always start by asking two things, before running any command:
 
-Use a ferramenta `AskUserQuestion` para o namespace. Liste como opções os namespaces de projeto que existem (confira com `kubectl get ns`), e o usuário pode escrever outro em "Other". Peça a descrição na mesma pergunta ou em texto livre.
+1. **Which namespace** the problem is in.
+2. **A short description** of the problem: what happens and what should happen.
 
-Se o relato do usuário já trouxer o namespace ou a descrição, não ignore: apresente o que entendeu e peça para ele confirmar ou corrigir (por exemplo, "Entendi que o problema é X no namespace Y. Confere?").
+Use the `AskUserQuestion` tool for the namespace. List the project namespaces that exist as options (check with `kubectl get ns`); the user can type another one under "Other". Ask for the description in the same question or as free text.
 
-Se o usuário não souber o namespace, ou o problema for do cluster todo, registre isso como "cluster" e siga.
+If the user's report already includes the namespace or the description, do not ignore it: state what you understood and ask the user to confirm or correct it (for example, "I understood the problem is X in namespace Y. Is that right?").
 
-## 2. Investigar
+If the user does not know the namespace, or the problem affects the whole cluster, record it as "cluster" and move on.
 
-Use a skill `k8s-diagnose` para investigar, focando no namespace informado. Ela tem os comandos e a tabela de sintomas e causas. Guarde ao longo da investigação o que vai entrar no registro:
+## 2. Investigate
 
-- os comandos que foram decisivos para o diagnóstico;
-- as mensagens de erro e eventos exatos (copie o texto, não parafraseie);
-- as hipóteses descartadas e por quê.
+Use the `k8s-diagnose` skill to investigate, focusing on the namespace given. It has the commands and the table of symptoms and causes. Throughout the investigation, keep what will go into the record:
 
-## 3. Corrigir
+- the commands that were decisive for the diagnosis;
+- the exact error messages and events (copy the text, do not paraphrase);
+- the hypotheses ruled out, and why.
 
-- A investigação é somente leitura. **Antes de qualquer alteração** no cluster ou nos manifests (`apply`, `patch`, `delete`, `edit`, `scale`, `rollout restart`, `helm`), mostre ao usuário exatamente o que vai mudar e espere a autorização.
-- Se o usuário quiser acompanhar em tempo real, passe os comandos `watch`/`-w` para ele rodar em outro terminal antes de aplicar.
-- Prefira corrigir nos manifests em `~/devops/manifests/` em vez de só no cluster, para a correção não se perder. Recursos gerenciados pelo ArgoCD são revertidos se mudados só no cluster.
-- Depois de aplicar, verifique se o sintoma original sumiu.
+## 3. Fix
 
-## 4. Confirmar a resolução
+- The investigation is read-only. **Before any change** to the cluster or the manifests (`apply`, `patch`, `delete`, `edit`, `scale`, `rollout restart`, `helm`), show the user exactly what will change and wait for their approval.
+- If the user wants to follow along in real time, give them the `watch`/`-w` commands to run in another terminal before applying.
+- Prefer fixing the manifests in `~/devops/manifests/` over fixing only the cluster, so the fix is not lost. Resources managed by ArgoCD are reverted if changed only in the cluster.
+- After applying, check that the original symptom is gone.
 
-O problema só está resolvido quando o usuário confirmar. Depois da verificação, pergunte se pode considerar resolvido.
+## 4. Confirm the resolution
 
-- Se o usuário confirmar, siga para o registro.
-- Se o usuário desistir ou adiar, pergunte se quer registrar mesmo assim, com status "em aberto" e o que já foi descoberto.
+The problem is only resolved when the user confirms it. After the verification, ask whether it can be considered resolved.
 
-## 5. Registrar o incidente
+- If the user confirms, go on to the record.
+- If the user gives up or postpones, ask whether to record it anyway, with status "open" and what has been found so far.
 
-Crie o arquivo em `~/devops/troubleshooting/` com o nome `AAAA-MM-DD-<resumo-curto>.md`, usando a data de hoje e um resumo em kebab-case (por exemplo, `2026-11-07-argocd-resource-quota.md`). Antes de criar, liste a pasta: se já existir um registro do mesmo problema, atualize-o em vez de criar outro.
+## 5. Write the incident record
 
-Escreva em português, explicando em detalhes, para que o usuário entenda o problema ao reler meses depois. Explique os conceitos de Kubernetes envolvidos como para alguém que está aprendendo, em vez de só citar o nome deles. Use o modelo abaixo e remova seções que não se aplicarem. Como referência de nível de detalhe, veja `2026-11-07-argocd-resource-quota.md` na mesma pasta.
+Create the file in `~/devops/troubleshooting/` named `YYYY-MM-DD-<short-summary>.md`, using today's date and a kebab-case summary (for example, `2026-11-07-argocd-resource-quota.md`). Before creating it, list the folder: if a record of the same problem already exists, update it instead of creating another.
+
+Write the record in English, even when the conversation was in Portuguese. Write it in detail, so the user understands the problem when rereading it months later. Explain the Kubernetes concepts involved as if to someone who is learning, instead of only naming them. Use the template below and drop sections that do not apply. For the expected level of detail, see `2026-11-07-argocd-resource-quota.md` in the same folder.
 
 ```markdown
-# <Título que descreve o problema>
+# <Title that describes the problem>
 
-- **Data:** AAAA-MM-DD
+- **Date:** YYYY-MM-DD
 - **Namespace:** `<namespace>`
-- **Componente:** <app ou recurso afetado, com versão se souber>
-- **Status:** resolvido | em aberto
+- **Component:** <affected app or resource, with version if known>
+- **Status:** resolved | open
 
-## Sintoma
+## Symptom
 
-O que o usuário viu, com os comandos e saídas que mostravam o problema.
+What the user saw, with the commands and outputs that showed the problem.
 
-## Diagnóstico
+## Diagnosis
 
-Os comandos que levaram à causa, em ordem, e as mensagens de erro e eventos exatos.
-Inclua as hipóteses descartadas e por quê.
+The commands that led to the cause, in order, and the exact error messages and events.
+Include the hypotheses ruled out, and why.
 
-## Causa
+## Cause
 
-A causa raiz, em uma ou duas frases.
+The root cause, in one or two sentences.
 
-## Entendendo o problema
+## Understanding the problem
 
-Explicação detalhada dos conceitos envolvidos (por exemplo: o que é uma ResourceQuota,
-como funcionam requests e limits) e de por que eles causaram o sintoma. Use tabelas
-e exemplos com os números reais do caso.
+A detailed explanation of the concepts involved (for example: what a ResourceQuota is,
+how requests and limits work) and of why they caused the symptom. Use tables
+and examples with the real numbers from the case.
 
-## Solução
+## Solution
 
-O que foi alterado (arquivos, valores antes → depois, comandos aplicados) e por quê.
-Como foi verificado que resolveu.
+What was changed (files, values before → after, commands applied) and why.
+How it was verified that the fix worked.
 
-## Lições
+## Lessons
 
-O que verificar ou fazer diferente para não ter o mesmo problema.
+What to check or do differently to avoid the same problem.
 ```
 
-### Dados sensíveis
+### Sensitive data
 
-O arquivo vai para o GitHub. Nunca coloque nele senhas, tokens, chaves, valores de Secrets, conteúdo de `kubeconfig` ou credenciais de banco. Se uma saída de comando tiver dados assim, troque o valor por `<redacted>`. IPs da rede local, nomes de recursos e mensagens de erro do Kubernetes podem ficar.
+The file goes to GitHub. Never put passwords, tokens, keys, Secret values, `kubeconfig` contents or database credentials in it. If a command output contains such data, replace the value with `<redacted>`. Local network IPs, resource names and Kubernetes error messages are fine.
 
-Ao terminar, diga ao usuário o caminho completo do arquivo e resuma em poucas linhas o que foi registrado.
+When done, give the user the full path of the file and summarize in a few lines what was recorded.

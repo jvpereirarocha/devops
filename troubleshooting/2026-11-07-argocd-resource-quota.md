@@ -1,17 +1,17 @@
-# ArgoCD sem application-controller e sem services (ResourceQuota)
+# ArgoCD without application-controller and without services (ResourceQuota)
 
-- **Data:** 2026-11-07
+- **Date:** 2026-11-07
 - **Namespace:** `cicd-system`
-- **Componente:** ArgoCD v3.3.8
-- **Status:** resolvido (ArgoCD removido e manifests refeitos com Kustomize)
+- **Component:** ArgoCD v3.3.8
+- **Status:** resolved (ArgoCD removed and manifests rewritten with Kustomize)
 
-## Sintoma
+## Symptom
 
-- `kubectl get deploy -A` mostrava os deployments do ArgoCD no namespace `cicd-system`.
-- `kubectl get svc -A` não mostrava o namespace `cicd-system`: não existia nenhum Service lá. O `get svc -A` só lista namespaces que têm pelo menos um service.
-- O StatefulSet `argocd-application-controller` estava em `0/1` e nenhuma `Application` existia no cluster.
+- `kubectl get deploy -A` showed the ArgoCD deployments in the `cicd-system` namespace.
+- `kubectl get svc -A` did not show the `cicd-system` namespace: there was no Service in it. `get svc -A` only lists namespaces that have at least one service.
+- The `argocd-application-controller` StatefulSet was at `0/1`, and no `Application` existed in the cluster.
 
-## Diagnóstico
+## Diagnosis
 
 ```bash
 kubectl get all -n cicd-system
@@ -20,17 +20,17 @@ kubectl describe resourcequota -n cicd-system
 helm history argocd -n cicd-system
 ```
 
-Foram encontrados dois problemas.
+Two problems were found.
 
-**1. A instalação via Helm tinha falhado no meio do caminho:**
+**1. The Helm installation had failed halfway through:**
 
 ```
 1  Sat Apr 25 15:47:32 2026  failed  argo-cd-9.5.4  Release "argocd" failed: context canceled
 ```
 
-`context canceled` indica que o comando foi interrompido (Ctrl+C ou timeout do `--wait`). Os 4 services estavam no manifest da release, mas não existiam no cluster.
+`context canceled` means the command was interrupted (Ctrl+C or a `--wait` timeout). The 4 services were in the release manifest, but they did not exist in the cluster.
 
-**2. O application-controller era barrado pela ResourceQuota:**
+**2. The application-controller was blocked by the ResourceQuota:**
 
 ```
 create Pod argocd-application-controller-0 in StatefulSet argocd-application-controller failed error:
@@ -38,68 +38,68 @@ pods "argocd-application-controller-0" is forbidden: exceeded quota: cicd-system
 requested: limits.cpu=500m, used: limits.cpu=1600m, limited: limits.cpu=2
 ```
 
-## Entendendo o problema da quota
+## Understanding the quota problem
 
-### Requests e limits
+### Requests and limits
 
-Cada container pode declarar dois valores de CPU:
+Each container can declare two CPU values:
 
-- **request:** quanto de CPU o container tem garantido. O Kubernetes usa esse valor para decidir em qual node o pod cabe.
-- **limit:** o máximo que o container pode usar. Se passar disso, ele é limitado (throttling).
+- **request:** how much CPU the container is guaranteed. Kubernetes uses this value to decide which node the pod fits on.
+- **limit:** the most the container can use. If it goes above that, it is throttled.
 
-Por exemplo, o `argocd-server` tem `requests.cpu: 100m` e `limits.cpu: 500m`. Ele normalmente usa pouco, mas pode chegar a meio core. A unidade `m` significa milicore: `1000m` é 1 core, e `500m` é meio core.
+For example, `argocd-server` has `requests.cpu: 100m` and `limits.cpu: 500m`. It usually uses little, but it can reach half a core. The `m` unit means millicore: `1000m` is 1 core, and `500m` is half a core.
 
-### ResourceQuota: um teto para o namespace inteiro
+### ResourceQuota: a ceiling for the whole namespace
 
-A `cicd-system-quota` limita a **soma** de todos os pods do namespace:
+The `cicd-system-quota` limits the **sum** of all pods in the namespace:
 
 ```yaml
 hard:
-  requests.cpu: "1"     # soma dos requests de todos os pods: no máximo 1 core
-  limits.cpu: "2"       # soma dos limits de todos os pods: no máximo 2 cores
+  requests.cpu: "1"     # sum of the requests of all pods: at most 1 core
+  limits.cpu: "2"       # sum of the limits of all pods: at most 2 cores
 ```
 
-Antes de criar um pod, o Kubernetes verifica: "somando este pod com os que já existem, passa do teto?". Se passar, ele **recusa criar o pod**. É isso que o erro acima diz: "este pod pede 500m, os outros já usam 1600m, e 1600 + 500 = 2100m passa do teto de 2000m".
+Before creating a pod, Kubernetes checks: "adding this pod to the ones that already exist, does it go over the ceiling?". If it does, it **refuses to create the pod**. That is what the error above says: "this pod asks for 500m, the others already use 1600m, and 1600 + 500 = 2100m goes over the 2000m ceiling".
 
-### LimitRange: o valor padrão para quem não declara nada
+### LimitRange: the default value for containers that declare nothing
 
-A `cicd-system-limits` (LimitRange) define valores padrão para containers que não declaram `resources`. O padrão é `limits.cpu: 500m`. Os values do Helm não definiam resources para o application-controller, então ele recebeu esse padrão.
+The `cicd-system-limits` (LimitRange) sets default values for containers that do not declare `resources`. The default is `limits.cpu: 500m`. The Helm values did not set resources for the application-controller, so it got this default.
 
-### Por que a soma passava de 2
+### Why the sum went over 2
 
-| Componente | limits.cpu |
+| Component | limits.cpu |
 |---|---|
 | argocd-server | 500m |
 | argocd-repo-server | 500m |
 | argocd-applicationset-controller | 200m |
 | argocd-notifications-controller | 200m |
 | argocd-redis | 200m |
-| **Subtotal (os que subiram)** | **1600m** |
-| argocd-application-controller | 500m (padrão da LimitRange) |
-| **Total necessário** | **2100m**, não cabe em 2000m |
+| **Subtotal (the ones that started)** | **1600m** |
+| argocd-application-controller | 500m (LimitRange default) |
+| **Total needed** | **2100m**, does not fit in 2000m |
 
-O application-controller, que é o componente principal do ArgoCD, ficou de fora. Ele era o último da fila e não sobrou espaço na quota.
+The application-controller, which is ArgoCD's main component, was left out. It was last in line and there was no room left in the quota.
 
-## Solução
+## Solution
 
-1. O ArgoCD foi removido por completo: release do Helm, CRDs, ClusterRoles e namespace.
-2. A instalação foi refeita sem Helm, com Kustomize, em `manifests/ci-cd/`:
-   - `argocd-resources.yaml` define CPU e memória de **todos** os containers, inclusive o application-controller e os init containers, para nada depender do padrão da LimitRange.
-   - O `limits.cpu` da quota subiu de `"2"` para `"3"`.
+1. ArgoCD was removed completely: Helm release, CRDs, ClusterRoles and namespace.
+2. The installation was redone without Helm, with Kustomize, in `manifests/ci-cd/`:
+   - `argocd-resources.yaml` sets CPU and memory for **every** container, including the application-controller and the init containers, so nothing depends on the LimitRange default.
+   - The quota's `limits.cpu` went from `"2"` to `"3"`.
 
-### Por que 3
+### Why 3
 
-Na nova instalação, a soma dos limits fica em **2200m**. Entraram o application-controller e o Dex, que vem no manifest oficial. Com o teto em `3`, sobram 800m de folga.
+In the new installation, the sum of the limits is **2200m**. The application-controller and Dex, which comes in the official manifest, are now included. With the ceiling at `3`, there are 800m of headroom.
 
-Essa folga importa durante um rolling update. O pod novo sobe antes de o antigo ser removido, então por alguns segundos os dois contam na quota ao mesmo tempo. Sem folga, a atualização poderia travar pelo mesmo motivo.
+That headroom matters during a rolling update. The new pod starts before the old one is removed, so for a few seconds both count against the quota at the same time. Without headroom, the update could get stuck for the same reason.
 
-### Isso pesa no servidor?
+### Does this load the server?
 
-Não. Subir o `limits.cpu` não reserva CPU no node, só permite que os pods somados *possam* chegar até 3 cores. O que o Kubernetes reserva de fato são os requests, e esses continuam baixos: 550m no total, dentro do `requests.cpu: "1"`, que não mudou. Na época, o node usava cerca de 5% de CPU.
+No. Raising `limits.cpu` does not reserve CPU on the node; it only allows the pods together to *be able to* reach 3 cores. What Kubernetes actually reserves are the requests, and those stay low: 550m in total, within `requests.cpu: "1"`, which did not change. At the time, the node was using about 5% CPU.
 
-## Lições
+## Lessons
 
-- **Ao definir uma ResourceQuota, some os limits de todos os componentes**, inclusive os que não declaram resources e recebem o padrão da LimitRange, e deixe folga para rolling updates.
-- **Se um pod de Deployment ou StatefulSet não aparece, olhe os eventos do namespace** (`kubectl get events -n <ns>`). O erro de quota só aparece lá, não no `get pods`.
-- **Não interrompa uma instalação no meio.** Uma release interrompida fica com recursos faltando. Confira o resultado com `helm history` ou `kubectl get all -n <ns>`.
-- **`kubectl get <recurso> -A` só mostra namespaces que têm aquele recurso.** O namespace não aparecer na listagem não quer dizer que ele não existe.
+- **When defining a ResourceQuota, add up the limits of every component**, including the ones that do not declare resources and get the LimitRange default, and leave headroom for rolling updates.
+- **If a Deployment or StatefulSet pod does not show up, look at the namespace events** (`kubectl get events -n <ns>`). The quota error only shows up there, not in `get pods`.
+- **Do not interrupt an installation halfway.** An interrupted release is left with missing resources. Check the result with `helm history` or `kubectl get all -n <ns>`.
+- **`kubectl get <resource> -A` only shows namespaces that have that resource.** A namespace missing from the list does not mean it does not exist.
