@@ -78,7 +78,10 @@ kubectl get all -n cicd-system
 kubectl get ingress -n cicd-system
 kubectl describe resourcequota cicd-system-quota -n cicd-system
 
-# 6. Add argocd.local to /etc/hosts on the client machine (Traefik LoadBalancer IP)
+# 6. Name resolution. The ingress answers on two hosts, both pointing to the Traefik IP:
+#    - argocd.local.lan: DNS record on the router (192.168.18.1) -> 192.168.18.2.
+#      Works on every LAN device; this is the link on the homepage dashboard.
+#    - argocd.local: /etc/hosts entry on the admin machine (used by `argocd login`).
 kubectl get svc -n kube-system traefik     # EXTERNAL-IP, currently 192.168.18.2
 #    /etc/hosts line:
 #    192.168.18.2  argocd.local
@@ -88,7 +91,7 @@ kubectl get secret argocd-initial-admin-secret \
   -n cicd-system \
   -o jsonpath="{.data.password}" | base64 --decode && echo
 
-# ArgoCD UI is now available at http://argocd.local
+# ArgoCD UI is now available at http://argocd.local.lan (or http://argocd.local)
 # Login: admin / <password from step 7>
 
 # 8. (Recommended) Change the admin password after first login (User Info > Update Password,

@@ -30,7 +30,7 @@ kubectl apply -f <file> --dry-run=client --validate=true
 
 ## ArgoCD (Kustomize)
 
-ArgoCD is installed with Kustomize (no Helm) into `cicd-system`. `ci-cd/kustomization.yaml` pulls the official manifest (pinned version), sets the namespace, adds the namespace/quota/limit range, and patches resources (`argocd-resources.yaml`), server params (`argocd-cmd-params.yaml`) and the ClusterRoleBinding subjects, and adds the Traefik ingress `argocd.local` (`argocd-ingress.yaml`). Step-by-step install instructions are in `../k3s-commands.md` (Phase 2). To install or update:
+ArgoCD is installed with Kustomize (no Helm) into `cicd-system`. `ci-cd/kustomization.yaml` pulls the official manifest (pinned version), sets the namespace, adds the namespace/quota/limit range, and patches resources (`argocd-resources.yaml`), server params (`argocd-cmd-params.yaml`) and the ClusterRoleBinding subjects, and adds the Traefik ingress for `argocd.local.lan` (router DNS, used by the homepage) and `argocd.local` (`/etc/hosts`) (`argocd-ingress.yaml`). Step-by-step install instructions are in `../k3s-commands.md` (Phase 2). To install or update:
 ```bash
 kubectl kustomize ci-cd/                                   # preview
 kubectl apply -k ci-cd/ --server-side --force-conflicts    # apply (server-side is required: the CRDs are too large for client-side apply)
@@ -57,7 +57,7 @@ The cluster is organized into these namespaces:
 
 **Prometheus** uses Kubernetes service-discovery (`role: service`) and only scrapes services annotated with `prometheus.io/scrape: "true"`. To expose a new service to Prometheus, add that annotation along with `prometheus.io/port` and optionally `prometheus.io/path`.
 
-**Homepage** discovers services via `gethomepage.dev/*` annotations on Service objects — add those annotations to register a service in the dashboard automatically.
+**Homepage** cards come from the static `services.yaml` in `homepage/configmap.yaml`. To add a service, add an entry there, apply the ConfigMap and run `kubectl rollout restart deployment/homepage -n homepage` (the config files are mounted with `subPath`, so ConfigMap updates are not picked up without a restart). Homepage auto-discovery only works with `gethomepage.dev/*` annotations on **Ingress** objects, not on Services: the annotations on the Grafana and Prometheus Services have no effect.
 
 **GitHub runner** (`pipeline/github-runner/deployment.yaml`) mounts the host Docker socket and uses a PAT stored in a secret. The secret must be created manually before applying the deployment:
 ```bash

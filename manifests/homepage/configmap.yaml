@@ -29,6 +29,10 @@ data:
             icon: si-prometheus
             href: http://192.168.18.6
             description: Metrics and Monitoring
+        - ArgoCD:
+            icon: si-argo
+            href: http://argocd.local.lan
+            description: GitOps / Continuous Delivery
   widgets.yaml: |
     - resources:
         backend: kubernetes
