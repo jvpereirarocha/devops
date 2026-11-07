@@ -1,0 +1,45 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: homepage
+  namespace: homepage
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: homepage
+  template:
+    metadata:
+      labels:
+        app: homepage
+    spec:
+      serviceAccountName: homepage
+      containers:
+      - name: homepage
+        image: ghcr.io/gethomepage/homepage:latest
+        env:
+          - name: HOMEPAGE_ALLOWED_HOSTS
+            value: "*"
+        ports:
+        - containerPort: 3000
+        volumeMounts:
+        - name: config
+          mountPath: /app/config
+        - name: config-volume
+          mountPath: /app/config/settings.yaml
+          subPath: settings.yaml
+        - name: config-volume
+          mountPath: /app/config/services.yaml
+          subPath: services.yaml
+        - name: config-volume
+          mountPath: /app/config/widgets.yaml
+          subPath: widgets.yaml
+        - name: config-volume
+          mountPath: /app/config/kubernetes.yaml
+          subPath: kubernetes.yaml
+      volumes:
+      - name: config
+        emptyDir: {}
+      - name: config-volume
+        configMap:
+          name: homepage-config

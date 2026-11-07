@@ -1,0 +1,7 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: cicd-system
+  labels:
+    app.kubernetes.io/managed-by: kubectl
+    purpose: cicd-infrastructure

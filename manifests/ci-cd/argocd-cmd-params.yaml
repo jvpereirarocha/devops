@@ -1,0 +1,8 @@
+# Patch for the argocd-cmd-params-cm ConfigMap from the official manifest.
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: argocd-cmd-params-cm
+data:
+  # Run without TLS so Traefik terminates it at the ingress layer.
+  server.insecure: "true"

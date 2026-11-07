@@ -1,0 +1,51 @@
+# 05-grafana-deployment.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: grafana-deployment
+  namespace: observability
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: grafana
+  template:
+    metadata:
+      labels:
+        app: grafana
+    spec:
+      securityContext:
+        fsGroup: 472
+        runAsUser: 472
+      containers:
+        - name: grafana
+          image: grafana/grafana:10.4.0
+          ports:
+            - containerPort: 3000
+          volumeMounts:
+            - name: grafana-data-volume
+              mountPath: /var/lib/grafana
+      volumes:
+        - name: grafana-data-volume
+          persistentVolumeClaim:
+            claimName: grafana-data-pvc
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: grafana-service
+  namespace: observability
+  annotations:
+    gethomepage.dev/enabled: "true"
+    gethomepage.dev/group: "My library"
+    gethomepage.dev/name: "Grafana"
+    gethomepage.dev/description: "Metrics"
+    gethomepage.dev/icon: "si-grafana"
+    gethomepage.dev/href: "http://192.168.18.5"
+spec:
+  type: LoadBalancer
+  ports:
+    - port: 80
+      targetPort: 3000
+  selector:
+    app: grafana

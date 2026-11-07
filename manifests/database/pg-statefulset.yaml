@@ -1,0 +1,31 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: postgres
+  namespace: databases
+spec:
+  serviceName: "postgres"
+  replicas: 1
+  selector:
+    matchLabels:
+      app: postgres
+  template:
+    metadata:
+      labels:
+        app: postgres
+    spec:
+      containers:
+        - name: postgres
+          image: postgres:15-alpine3.22
+          ports:
+            - containerPort: 5432
+          envFrom:
+            - secretRef:
+                name: pg-secrets
+          volumeMounts:
+            - name: pg-storage
+              mountPath: /var/lib/postgresql/data
+      volumes:
+        - name: pg-storage
+          persistentVolumeClaim:
+            claimName: pg-data-pvc

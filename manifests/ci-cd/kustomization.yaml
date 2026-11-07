@@ -1,0 +1,28 @@
+# ArgoCD in the cicd-system namespace, installed with Kustomize (no Helm).
+# Apply:   kubectl apply -k ci-cd/ --server-side --force-conflicts
+# Preview: kubectl kustomize ci-cd/
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namespace: cicd-system
+
+resources:
+  - namespace.yaml
+  - cicd-system-resource-quota.yaml
+  - cicd-system-limit-range.yaml
+  # Official ArgoCD manifest, pinned to a version.
+  - https://raw.githubusercontent.com/argoproj/argo-cd/v3.3.8/manifests/install.yaml
+
+patches:
+  # CPU/memory for every container, so the pods fit the namespace quota.
+  - path: argocd-resources.yaml
+  # Server runs without TLS (--insecure).
+  - path: argocd-cmd-params.yaml
+  # The official manifest hard-codes the "argocd" namespace in the
+  # ClusterRoleBinding subjects; point them to cicd-system.
+  - target:
+      kind: ClusterRoleBinding
+    patch: |-
+      - op: replace
+        path: /subjects/0/namespace
+        value: cicd-system

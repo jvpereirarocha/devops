@@ -1,0 +1,132 @@
+## ============================================================
+## Namespace para o runner (isolado da aplicação)
+## ============================================================
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: github-actions
+---
+## ============================================================
+## Secret com o PAT do GitHub
+## NÃO aplique este arquivo diretamente — crie o secret via CLI:
+##
+##   kubectl create secret generic github-runner-secret \
+##     -n github-actions \
+##     --from-literal=GITHUB_PAT=<SEU_TOKEN>
+##
+## Esse bloco serve apenas como referência.
+## ============================================================
+# apiVersion: v1
+# kind: Secret
+# metadata:
+#   name: github-runner-secret
+#   namespace: github-actions
+# type: Opaque
+# stringData:
+#   GITHUB_PAT: "ghp_XXXXXXXXXXXXXXXXXXXX"
+---
+## ============================================================
+## ServiceAccount + RBAC para o runner poder fazer kubectl apply
+## ============================================================
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: github-runner-sa
+  namespace: github-actions
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: github-runner-deploy-role
+rules:
+  - apiGroups: ["apps"]
+    resources: ["deployments"]
+    verbs: ["get", "list", "patch", "update"]
+  - apiGroups: [""]
+    resources: ["pods", "services", "configmaps", "secrets"]
+    verbs: ["get", "list"]
+  - apiGroups: ["apps"]
+    resources: ["deployments/status"]
+    verbs: ["get"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: github-runner-deploy-binding
+subjects:
+  - kind: ServiceAccount
+    name: github-runner-sa
+    namespace: github-actions
+roleRef:
+  kind: ClusterRole
+  name: github-runner-deploy-role
+  apiGroup: rbac.authorization.k8s.io
+---
+## ============================================================
+## Deployment do self-hosted runner
+## ============================================================
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: github-runner
+  namespace: github-actions
+  labels:
+    app: github-runner
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: github-runner
+  template:
+    metadata:
+      labels:
+        app: github-runner
+    spec:
+      serviceAccountName: github-runner-sa
+      containers:
+        - name: runner
+          image: myoung34/github-runner:latest
+          env:
+            - name: RUNNER_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.name
+            - name: RUNNER_SCOPE
+              value: "repo"
+            - name: REPO_URL
+              value: "https://github.com/jvpereirarocha/fintracker"  # <-- ALTERE AQUI
+            - name: ACCESS_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: github-runner-secret
+                  key: GITHUB_PAT
+            - name: LABELS
+              value: "self-hosted,linux,k3s"
+            - name: RUNNER_WORKDIR
+              value: "/tmp/runner/work"
+            - name: DISABLE_AUTO_UPDATE
+              value: "true"
+          volumeMounts:
+            - name: work
+              mountPath: /tmp/runner/work
+            - name: docker-sock
+              mountPath: /var/run/docker.sock
+          resources:
+            requests:
+              cpu: 250m
+              memory: 512Mi
+            limits:
+              cpu: "1"
+              memory: 1Gi
+      volumes:
+        # Docker container actions (ex.: semantic-release) rodam no Docker do host via socket
+        # e montam o workspace pelo caminho do host. Por isso o workdir precisa ser um
+        # hostPath no MESMO caminho de dentro do pod; um emptyDir chegaria vazio na action.
+        - name: work
+          hostPath:
+            path: /tmp/runner/work
+            type: DirectoryOrCreate
+        - name: docker-sock
+          hostPath:
+            path: /var/run/docker.sock
+            type: Socket

@@ -1,0 +1,38 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: homepage-config
+  namespace: homepage
+data:
+  settings.yaml: |
+    title: "My Homelab Dashboard"
+    theme: default
+    layout:
+      My library:
+        style: row
+        columns: 3
+  services.yaml: |
+    - My library:
+        - Router:
+            icon: si-ubiquiti
+            href: http://192.168.18.1
+            description: Network Gateway
+        - Expense tracker:
+            icon: si-simpleanalytics
+            href: http://fintracker.local.lan
+            description: Personal financial app
+        - Grafana:
+            icon: si-grafana
+            href: http://192.168.18.5
+            description: Metrics
+        - Prometheus:
+            icon: si-prometheus
+            href: http://192.168.18.6
+            description: Metrics and Monitoring
+  widgets.yaml: |
+    - resources:
+        backend: kubernetes
+        cpu: true
+        memory: true
+  kubernetes.yaml: |
+    mode: cluster

@@ -1,0 +1,13 @@
+# Local Claude Code settings (personal, not shared)
+.claude/settings.local.json
+
+# Secrets with real values: keep only the *.example.yaml versions in git
+manifests/database/pg-secrets.yaml
+*.secret.yaml
+*-secret.yaml
+*.env
+.env*
+
+# Kubeconfig files
+kubeconfig*
+*.kubeconfig
