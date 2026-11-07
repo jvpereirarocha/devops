@@ -14,3 +14,6 @@ kubeconfig*
 
 # Internal-only agent context (personal setup details)
 .agents/skills/my-setup.md
+
+# Local-only Claude Code skills (not versioned)
+.claude/skills/disk-cleanup/
