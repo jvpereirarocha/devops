@@ -12,4 +12,4 @@ Problems found along the way are recorded in [`../troubleshooting/`](../troubles
 
 ## Index
 
-_No tutorials yet._
+- [How to deploy ArgoCD on the Kubernetes cluster](how-to-deploy-argocd-on-the-kubernetes-cluster.md): install ArgoCD with Kustomize in a namespace with a ResourceQuota, expose it through Traefik and create the first Application.
