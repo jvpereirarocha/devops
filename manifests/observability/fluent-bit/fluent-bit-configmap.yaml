@@ -1,6 +1,7 @@
 # Fluent Bit pipeline: tail the container log files of the fintracker API and bot,
-# join multi-line Python tracebacks, drop Prometheus scrape access logs, add Kubernetes
-# metadata and ship each app to its own OpenObserve stream.
+# join multi-line Python tracebacks, drop Prometheus scrape access logs, turn the API's JSON
+# request lines into columns, add Kubernetes metadata and ship each app to its own
+# OpenObserve stream.
 # Fluent Bit does not reload this file on its own: after changing it run
 #   kubectl rollout restart daemonset/fluent-bit -n observability
 apiVersion: v1
@@ -22,19 +23,25 @@ data:
       storage.sync: normal
       storage.backlog.mem_limit: 5M
 
+    parsers:
+      # The API's request logging middleware writes one JSON object per line
+      - name: json_log
+        format: json
+
     multiline_parsers:
-      # A record starts with a Python logging timestamp ("2026-01-01 10:00:00,123 [ERROR] ...")
-      # or a uvicorn level prefix ("INFO:     ..."). Any other line (traceback frames, blank
-      # lines, "The above exception..." and the exception line) belongs to the previous record.
+      # A record starts with a Python logging timestamp ("2026-01-01 10:00:00,123 [ERROR] ..."),
+      # a uvicorn level prefix ("INFO:     ...") or a JSON object ("{"event": "request", ...}").
+      # Any other line (traceback frames, blank lines, "The above exception..." and the
+      # exception line) belongs to the previous record.
       - name: python_app
         type: regex
         flush_timeout: 1000
         rules:
           - state: start_state
-            regex: '/^(\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}|[A-Z]+:\s)/'
+            regex: '/^(\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}|[A-Z]+:\s|\{)/'
             next_state: cont
           - state: cont
-            regex: '/^(?!\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}|[A-Z]+:\s)/'
+            regex: '/^(?!\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}|[A-Z]+:\s|\{)/'
             next_state: cont
 
     pipeline:
@@ -69,9 +76,20 @@ data:
           emitter_storage.type: filesystem
 
         # Prometheus scrapes the API every 10s; those access logs are pure noise.
+        # Only needed while the API still runs with the uvicorn access log: the request logging
+        # middleware skips /metrics. Remove it once that version is deployed.
         - name: grep
           match: kube.api.*
           exclude: log "GET /metrics HTTP/1\.1"
+
+        # JSON request lines become columns (route, status, duration_ms, request_id...).
+        # Lines that are not JSON (startup messages, tracebacks) fail to parse and pass through
+        # unchanged with their "log" field.
+        - name: parser
+          match: kube.api.*
+          key_name: log
+          parser: json_log
+          reserve_data: on
 
         - name: kubernetes
           match: kube.api.*
