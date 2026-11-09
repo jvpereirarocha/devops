@@ -11,10 +11,12 @@ fail on them, so exclude this folder as well).
 | `api-fintracker-api-metrics.json` | API Metrics. Tab **Home**: number of requests, requests over time, requests by status code. Tab **Errors**: 5xx over time, 5xx error rate (gauge 0-10%), endpoints with most errors, 4xx by status code, errors by image version | API Fintracker | `fintracker_api` |
 
 All panels use Custom SQL. The bot panels read the usage lines logged by the bot
-(`bot.usage: event=<name> outcome=<ok|error> duration_ms=<n>`). The API panels read the
-uvicorn access log lines (`"<METHOD> <path> HTTP/1.1" <status>`), filtered with
-`log LIKE '%HTTP/1.1" %'`; the Prometheus `GET /metrics` scrapes are dropped by Fluent Bit
-before they reach OpenObserve.
+(`bot.usage: event=<name> outcome=<ok|error> duration_ms=<n>`). The API panels read the JSON
+request lines written by the API's request logging middleware (since API 1.4.0), which Fluent
+Bit parses into columns (`event`, `method`, `route`, `status`, `duration_ms`, `request_id`,
+`error`, `validation_errors`); they filter with `event = 'request'`. `route` is the route
+template (`/api/v1/transactions/{id}`), not the raw path. The middleware does not log
+`GET /metrics`. Data from before 1.4.0 (uvicorn access log lines) does not show in these panels.
 
 ## Import
 

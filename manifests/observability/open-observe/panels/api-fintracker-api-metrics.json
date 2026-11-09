@@ -4,7 +4,6 @@
   "title": "API Metrics",
   "description": "API metrics with number of requests, errors, most requested endpoints, etc",
   "role": "",
-  "owner": "",
   "tabs": [
     {
       "tabId": "default",
@@ -103,7 +102,7 @@
           "queryType": "sql",
           "queries": [
             {
-              "query": "SELECT count(*) AS requests\nFROM fintracker_api\nWHERE log LIKE '%HTTP/1.1\" %'",
+              "query": "SELECT count(*) AS requests\nFROM fintracker_api\nWHERE event = 'request'",
               "vrlFunctionQuery": "",
               "customQuery": true,
               "fields": {
@@ -258,7 +257,7 @@
           "queryType": "sql",
           "queries": [
             {
-              "query": "SELECT histogram(_timestamp) AS x_axis, count(*) AS requests\nFROM fintracker_api\nWHERE log LIKE '%HTTP/1.1\" %'\nGROUP BY x_axis\nORDER BY x_axis",
+              "query": "SELECT histogram(_timestamp) AS x_axis, count(*) AS requests\nFROM fintracker_api\nWHERE event = 'request'\nGROUP BY x_axis\nORDER BY x_axis",
               "vrlFunctionQuery": "",
               "customQuery": true,
               "fields": {
@@ -432,7 +431,7 @@
           "queryType": "sql",
           "queries": [
             {
-              "query": "SELECT regexp_match(log, 'HTTP/1.1\" (\\d{3})')[1] AS status,\n       count(*) AS requests\nFROM fintracker_api\nWHERE log LIKE '%HTTP/1.1\" %'\nGROUP BY status\nORDER BY status",
+              "query": "SELECT status,\n       count(*) AS requests\nFROM fintracker_api\nWHERE event = 'request'\nGROUP BY status\nORDER BY status",
               "vrlFunctionQuery": "",
               "customQuery": true,
               "fields": {
@@ -612,7 +611,7 @@
           "queryType": "sql",
           "queries": [
             {
-              "query": "SELECT histogram(_timestamp) AS x_axis,\n       regexp_match(log, 'HTTP/1.1\" (\\d{3})')[1] AS status,\n       count(*) AS errors\nFROM fintracker_api\nWHERE log LIKE '%HTTP/1.1\" 5__ %'\nGROUP BY x_axis, status\nORDER BY x_axis",
+              "query": "SELECT histogram(_timestamp) AS x_axis,\n       status,\n       count(*) AS errors\nFROM fintracker_api\nWHERE event = 'request' AND status >= 500\nGROUP BY x_axis, status\nORDER BY x_axis",
               "vrlFunctionQuery": "",
               "customQuery": true,
               "fields": {
@@ -804,7 +803,7 @@
           "queryType": "sql",
           "queries": [
             {
-              "query": "SELECT regexp_match(log, '\"(\\w+) ')[1] AS method,\n       regexp_match(log, '\"\\w+ ([^ ?]+)')[1] AS path,\n       regexp_match(log, 'HTTP/1.1\" (\\d{3})')[1] AS status,\n       count(*) AS errors\nFROM fintracker_api\nWHERE log LIKE '%HTTP/1.1\" 4__ %' OR log LIKE '%HTTP/1.1\" 5__ %'\nGROUP BY method, path, status\nORDER BY errors DESC",
+              "query": "SELECT method,\n       route,\n       status,\n       count(*) AS errors,\n       round(avg(duration_ms)) AS avg_duration_ms\nFROM fintracker_api\nWHERE event = 'request' AND status >= 400\nGROUP BY method, route, status\nORDER BY errors DESC",
               "vrlFunctionQuery": "",
               "customQuery": true,
               "fields": {
@@ -831,15 +830,15 @@
                     "showFieldAsJson": false
                   },
                   {
-                    "label": "path",
-                    "alias": "path",
+                    "label": "route",
+                    "alias": "route",
                     "type": "build",
                     "color": null,
                     "args": [
                       {
                         "type": "field",
                         "value": {
-                          "field": "path",
+                          "field": "route",
                           "streamAlias": null
                         }
                       }
@@ -1016,7 +1015,7 @@
           "queryType": "sql",
           "queries": [
             {
-              "query": "SELECT regexp_match(log, 'HTTP/1.1\" (\\d{3})')[1] AS status,\n       count(*) AS errors\nFROM fintracker_api\nWHERE log LIKE '%HTTP/1.1\" 4__ %'\nGROUP BY status\nORDER BY status",
+              "query": "SELECT status,\n       count(*) AS errors\nFROM fintracker_api\nWHERE event = 'request' AND status BETWEEN 400 AND 499\nGROUP BY status\nORDER BY status",
               "vrlFunctionQuery": "",
               "customQuery": true,
               "fields": {
@@ -1190,7 +1189,7 @@
           "queryType": "sql",
           "queries": [
             {
-              "query": "SELECT kubernetes_container_image AS image,\n       count(*) AS requests,\n       sum(CASE WHEN log LIKE '%HTTP/1.1\" 5__ %' THEN 1 ELSE 0 END) AS errors_5xx,\n       round(100.0 * sum(CASE WHEN log LIKE '%HTTP/1.1\" 5__ %' THEN 1 ELSE 0 END) / count(*), 2) AS error_rate_5xx_pct\nFROM fintracker_api\nWHERE log LIKE '%HTTP/1.1\" %'\nGROUP BY image\nORDER BY image DESC",
+              "query": "SELECT kubernetes_container_image AS image,\n       count(*) AS requests,\n       sum(CASE WHEN status >= 500 THEN 1 ELSE 0 END) AS errors_5xx,\n       round(100.0 * sum(CASE WHEN status >= 500 THEN 1 ELSE 0 END) / count(*), 2) AS error_rate_5xx_pct\nFROM fintracker_api\nWHERE event = 'request'\nGROUP BY image\nORDER BY image DESC",
               "vrlFunctionQuery": "",
               "customQuery": true,
               "fields": {
@@ -1405,7 +1404,7 @@
           "queryType": "sql",
           "queries": [
             {
-              "query": "SELECT COALESCE(\n         round(100.0 * sum(CASE WHEN log LIKE '%HTTP/1.1\" 5__ %' THEN 1 ELSE 0 END) / NULLIF(count(*), 0), 2),\n         0) AS error_rate_5xx_pct\nFROM fintracker_api\nWHERE log LIKE '%HTTP/1.1\" %'",
+              "query": "SELECT COALESCE(\n         round(100.0 * sum(CASE WHEN status >= 500 THEN 1 ELSE 0 END) / NULLIF(count(*), 0), 2),\n         0) AS error_rate_5xx_pct\nFROM fintracker_api\nWHERE event = 'request'",
               "vrlFunctionQuery": "",
               "customQuery": true,
               "fields": {
