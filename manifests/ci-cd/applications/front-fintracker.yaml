@@ -1,0 +1,22 @@
+# ArgoCD Application for the fintracker frontend (Vue + nginx).
+# Shares the fintracker-dev Namespace with the API but does not manage it:
+# the Namespace belongs to the "fintracker" Application.
+# Apply: kubectl apply -f ci-cd/applications/
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: front-fintracker
+  namespace: cicd-system
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/jvpereirarocha/expensetracker-front
+    targetRevision: main
+    path: k8s
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: fintracker-dev
+  syncPolicy:
+    automated:
+      enabled: true
+      selfHeal: true

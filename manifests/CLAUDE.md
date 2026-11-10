@@ -38,6 +38,8 @@ kubectl apply -k ci-cd/ --server-side --force-conflicts    # apply (server-side 
 
 `ci-cd/` must be applied with `-k`, not `-f`: its patch files are partial manifests and are not valid on their own, so exclude it from `kubectl apply -R -f .`.
 
+The ArgoCD `Application` objects live in `ci-cd/applications/` and are applied separately with `kubectl apply -f ci-cd/applications/` (they are not part of the kustomization, so updating ArgoCD never touches them). `fintracker` syncs the API repo (`k8s/`) and owns the `fintracker-dev` Namespace; `front-fintracker` syncs the frontend repo (`k8s/`) into the same namespace without declaring it. Both use automated sync with selfHeal, and the image versions are pinned with `images.newTag` in each repo's `kustomization.yaml`.
+
 ArgoCD runs `--insecure` (no TLS); Traefik handles TLS termination at the ingress layer. Admin password login is used; the initial password lives in the `argocd-initial-admin-secret` secret in the cluster, not in this repo.
 
 ## Architecture

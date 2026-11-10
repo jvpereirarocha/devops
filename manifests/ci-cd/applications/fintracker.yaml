@@ -1,0 +1,21 @@
+# ArgoCD Application for the fintracker API (backend).
+# Also owns the fintracker-dev Namespace (declared in the API repo).
+# Apply: kubectl apply -f ci-cd/applications/
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: fintracker
+  namespace: cicd-system
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/jvpereirarocha/fintracker
+    targetRevision: main
+    path: k8s
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: fintracker-dev
+  syncPolicy:
+    automated:
+      enabled: true
+      selfHeal: true
