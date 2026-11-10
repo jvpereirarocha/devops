@@ -12,6 +12,7 @@ Problems found along the way are recorded in [`../troubleshooting/`](../troubles
 
 ## Index
 
+- [How to deploy a frontend with ArgoCD and a GitHub Actions release pipeline](how-to-deploy-a-frontend-with-argocd-and-a-github-actions-release-pipeline.md): move a hand-deployed frontend to GitOps with its own ArgoCD Application, a semantic-release pipeline that pushes the image before bumping the tag, and a short ReplicaSet history.
 - [How to deploy ArgoCD on the Kubernetes cluster](how-to-deploy-argocd-on-the-kubernetes-cluster.md): install ArgoCD with Kustomize in a namespace with a ResourceQuota, expose it through Traefik and create the first Application.
 - [How to deploy OpenObserve on the Kubernetes cluster](how-to-deploy-openobserve-on-the-kubernetes-cluster.md): run OpenObserve in local mode as a StatefulSet, expose its UI through Traefik, scrape it with Prometheus and verify log ingestion end to end.
 - [How to limit the old ReplicaSets kept by a Deployment](how-to-limit-the-old-replicasets-kept-by-a-deployment.md): understand why a Deployment keeps empty ReplicaSets after each rollout, even with ArgoCD, and cap them with `revisionHistoryLimit` through git.
