@@ -1,0 +1,6 @@
+# Message brokers. Named by function (like databases/observability), not by product,
+# so another broker could live here later.
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: messaging

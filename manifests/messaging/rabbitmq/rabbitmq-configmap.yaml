@@ -1,0 +1,32 @@
+# Extra RabbitMQ settings, mounted as /etc/rabbitmq/conf.d/20-homelab.conf (subPath).
+# The image's own 10-defaults.conf is kept; files in conf.d are loaded in name order,
+# so this file wins on any key both set.
+# The subPath mount is not refreshed on ConfigMap updates: after changing it run
+#   kubectl rollout restart statefulset/rabbitmq -n messaging
+# The plugins (rabbitmq_management, rabbitmq_prometheus) are already enabled by the image.
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: rabbitmq-config
+  namespace: messaging
+data:
+  20-homelab.conf: |
+    ## The image's 10-defaults.conf lets "guest" log in from the network. We create our own
+    ## admin user from the Secret (so guest is never created), and this keeps guest
+    ## loopback-only anyway in case it ever comes back.
+    loopback_users.guest = true
+
+    ## Memory: tell RabbitMQ the container limit explicitly (1Gi, same as the StatefulSet).
+    ## Publishers are blocked when the broker uses 60% of it, which leaves room for the
+    ## Erlang VM overhead before the kernel OOM-kills the pod.
+    total_memory_available_override_value = 1073741824
+    vm_memory_high_watermark.relative = 0.6
+
+    ## Disk: block publishers when less than 2GB is free on the data volume. local-path does
+    ## not enforce the PVC size, so this protects the node's root partition.
+    disk_free_limit.absolute = 2GB
+
+    ## Logs: plain text to stdout (collected by Fluent Bit), no log file on the volume.
+    log.console = true
+    log.console.level = info
+    log.file = false

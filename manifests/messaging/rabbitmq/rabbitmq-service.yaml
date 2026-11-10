@@ -1,0 +1,52 @@
+# Two Services:
+# - rabbitmq-headless: governing Service of the StatefulSet (stable pod DNS name).
+# - rabbitmq: what clients use. In-cluster apps connect to
+#   amqp://<user>:<pass>@rabbitmq.messaging.svc.cluster.local:5672/
+#   Only this one carries the Prometheus annotations, so the broker is scraped once.
+apiVersion: v1
+kind: Service
+metadata:
+  name: rabbitmq-headless
+  namespace: messaging
+  labels:
+    app: rabbitmq
+spec:
+  clusterIP: None
+  selector:
+    app: rabbitmq
+  ports:
+    - name: amqp
+      port: 5672
+      targetPort: amqp
+    - name: epmd
+      port: 4369
+      targetPort: epmd
+    - name: dist
+      port: 25672
+      targetPort: dist
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: rabbitmq
+  namespace: messaging
+  labels:
+    app: rabbitmq
+  annotations:
+    prometheus.io/scrape: "true"
+    prometheus.io/port: "15692"
+    prometheus.io/path: "/metrics"
+spec:
+  type: ClusterIP
+  selector:
+    app: rabbitmq
+  ports:
+    - name: amqp
+      port: 5672
+      targetPort: amqp
+    - name: management
+      port: 15672
+      targetPort: management
+    - name: prometheus
+      port: 15692
+      targetPort: prometheus

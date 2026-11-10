@@ -37,6 +37,10 @@ data:
             icon: openobserve.png
             href: http://openobserve.local.lan
             description: Logs
+        - RabbitMQ:
+            icon: rabbitmq.png
+            href: http://rabbitmq.local.lan
+            description: Message broker
   widgets.yaml: |
     - resources:
         backend: kubernetes

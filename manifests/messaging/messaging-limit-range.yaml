@@ -1,0 +1,22 @@
+# With a ResourceQuota on cpu/memory, every container must declare requests and limits.
+# These defaults apply to containers that do not (e.g. a `kubectl run` debug pod).
+apiVersion: v1
+kind: LimitRange
+metadata:
+  name: messaging-limits
+  namespace: messaging
+spec:
+  limits:
+    - type: Container
+      default:
+        cpu: "250m"
+        memory: 256Mi
+      defaultRequest:
+        cpu: "50m"
+        memory: 64Mi
+      max:
+        cpu: "2"
+        memory: 2Gi
+      min:
+        cpu: "10m"
+        memory: 32Mi

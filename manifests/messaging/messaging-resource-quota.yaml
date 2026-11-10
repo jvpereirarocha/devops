@@ -1,0 +1,16 @@
+# Caps the whole namespace so a runaway broker cannot starve the single node.
+# Sized for one RabbitMQ pod (requests 250m/512Mi, limits 1 CPU/1Gi) plus headroom
+# for a rolling restart or a debug pod.
+apiVersion: v1
+kind: ResourceQuota
+metadata:
+  name: messaging-quota
+  namespace: messaging
+spec:
+  hard:
+    requests.cpu: "1"
+    requests.memory: 2Gi
+    limits.cpu: "2"
+    limits.memory: 3Gi
+    persistentvolumeclaims: "3"
+    pods: "5"

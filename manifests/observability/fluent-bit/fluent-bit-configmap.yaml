@@ -1,5 +1,5 @@
-# Fluent Bit pipeline: tail the container log files of the fintracker API and bot,
-# join multi-line Python tracebacks, turn the API's JSON
+# Fluent Bit pipeline: tail the container log files of the fintracker API and bot and of
+# RabbitMQ, join multi-line records (Python tracebacks, RabbitMQ crash reports), turn the API's JSON
 # request lines into columns, add Kubernetes metadata and ship each app to its own
 # OpenObserve stream.
 # Fluent Bit does not reload this file on its own: after changing it run
@@ -29,7 +29,8 @@ data:
         format: json
 
     multiline_parsers:
-      # A record starts with a Python logging timestamp ("2026-01-01 10:00:00,123 [ERROR] ..."),
+      # A record starts with a timestamp (Python logging "2026-01-01 10:00:00,123 [ERROR] ...",
+      # RabbitMQ "2026-01-01 10:00:00.123456+00:00 [info] ..."),
       # a uvicorn level prefix ("INFO:     ...") or a JSON object ("{"event": "request", ...}").
       # Any other line (traceback frames, blank lines, "The above exception..." and the
       # exception line) belongs to the previous record.
@@ -68,6 +69,17 @@ data:
           skip_long_lines: on
           storage.type: filesystem
 
+        # RabbitMQ StatefulSet pods are rabbitmq-<ordinal>.
+        - name: tail
+          tag: kube.rabbitmq.*
+          path: /var/log/containers/rabbitmq-*_messaging_rabbitmq-*.log
+          multiline.parser: cri
+          db: /var/lib/fluent-bit/tail-rabbitmq.db
+          read_from_head: true
+          refresh_interval: 10
+          skip_long_lines: on
+          storage.type: filesystem
+
       filters:
         - name: multiline
           match: kube.*
@@ -98,6 +110,13 @@ data:
           labels: on
           annotations: off
 
+        - name: kubernetes
+          match: kube.rabbitmq.*
+          kube_tag_prefix: kube.rabbitmq.var.log.containers.
+          buffer_size: 0
+          labels: on
+          annotations: off
+
       outputs:
         - name: http
           match: kube.api.*
@@ -118,6 +137,20 @@ data:
           host: openobserve.observability.svc.cluster.local
           port: 5080
           uri: /api/default/fintracker_bot/_json
+          format: json
+          json_date_key: _timestamp
+          json_date_format: iso8601
+          http_user: ${OPENOBSERVE_USER}
+          http_passwd: ${OPENOBSERVE_TOKEN}
+          compress: gzip
+          retry_limit: 10
+          storage.total_limit_size: 256M
+
+        - name: http
+          match: kube.rabbitmq.*
+          host: openobserve.observability.svc.cluster.local
+          port: 5080
+          uri: /api/default/rabbitmq/_json
           format: json
           json_date_key: _timestamp
           json_date_format: iso8601

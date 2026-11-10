@@ -1,0 +1,119 @@
+# RabbitMQ single node. A StatefulSet (not a Deployment) keeps a stable hostname
+# (rabbitmq-0): the node name is rabbit@<hostname> and the data on the volume is tied to it,
+# so a new name would start an empty broker.
+# The admin user comes from the rabbitmq-secret Secret, created outside git:
+#   kubectl create secret generic rabbitmq-secret -n messaging \
+#     --from-literal=RABBITMQ_DEFAULT_USER=<ADMIN_USER> \
+#     --from-literal=RABBITMQ_DEFAULT_PASS=<ADMIN_PASSWORD>
+# Those variables are only used on the first boot (empty volume). Changing the Secret later
+# does not change the password: use rabbitmqctl change_password for that.
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: rabbitmq
+  namespace: messaging
+  labels:
+    app: rabbitmq
+spec:
+  serviceName: rabbitmq-headless
+  replicas: 1
+  selector:
+    matchLabels:
+      app: rabbitmq
+  template:
+    metadata:
+      labels:
+        app: rabbitmq
+    spec:
+      # Gives the broker time to close connections and flush queues to disk on shutdown.
+      terminationGracePeriodSeconds: 60
+      securityContext:
+        # rabbitmq user/group of the official Alpine image.
+        runAsUser: 100
+        runAsGroup: 101
+        fsGroup: 101
+        # By default the kubelet re-applies fsGroup (chmod g+rw) to every file on each mount,
+        # which makes .erlang.cookie group-readable and Erlang refuses to start. OnRootMismatch
+        # only touches the volume when its root does not match yet (first mount).
+        fsGroupChangePolicy: OnRootMismatch
+        runAsNonRoot: true
+      initContainers:
+        # Erlang requires the cookie (created on the first boot) to be owner-only (600).
+        # Fixes it if anything ever widened the permissions; a no-op on the first boot.
+        - name: fix-cookie-permissions
+          image: rabbitmq:4.3.7-management-alpine
+          command: ["sh", "-c", "[ ! -f /var/lib/rabbitmq/.erlang.cookie ] || chmod 600 /var/lib/rabbitmq/.erlang.cookie"]
+          resources:
+            requests:
+              cpu: 10m
+              memory: 32Mi
+            limits:
+              cpu: 100m
+              memory: 64Mi
+          volumeMounts:
+            - name: data
+              mountPath: /var/lib/rabbitmq
+      containers:
+        - name: rabbitmq
+          image: rabbitmq:4.3.7-management-alpine
+          ports:
+            - name: amqp
+              containerPort: 5672
+            - name: management
+              containerPort: 15672
+            - name: prometheus
+              containerPort: 15692
+            - name: epmd
+              containerPort: 4369
+            - name: dist
+              containerPort: 25672
+          envFrom:
+            - secretRef:
+                name: rabbitmq-secret
+          resources:
+            requests:
+              cpu: 250m
+              memory: 512Mi
+            limits:
+              cpu: "1"
+              memory: 1Gi
+          # The first boot creates the database and enables plugins, which can take a while.
+          startupProbe:
+            exec:
+              command: ["rabbitmq-diagnostics", "-q", "ping"]
+            periodSeconds: 10
+            timeoutSeconds: 10
+            failureThreshold: 18
+          # Ready only when the AMQP listener accepts connections.
+          readinessProbe:
+            exec:
+              command: ["rabbitmq-diagnostics", "-q", "check_port_connectivity"]
+            periodSeconds: 30
+            timeoutSeconds: 20
+          # The node runtime answers. Kept cheap and tolerant: a restart is costly.
+          livenessProbe:
+            exec:
+              command: ["rabbitmq-diagnostics", "-q", "ping"]
+            periodSeconds: 60
+            timeoutSeconds: 20
+            failureThreshold: 3
+          volumeMounts:
+            - name: data
+              mountPath: /var/lib/rabbitmq
+            - name: config
+              mountPath: /etc/rabbitmq/conf.d/20-homelab.conf
+              subPath: 20-homelab.conf
+              readOnly: true
+      volumes:
+        - name: config
+          configMap:
+            name: rabbitmq-config
+  volumeClaimTemplates:
+    - metadata:
+        name: data
+      spec:
+        accessModes: ["ReadWriteOnce"]
+        storageClassName: local-path
+        resources:
+          requests:
+            storage: 5Gi

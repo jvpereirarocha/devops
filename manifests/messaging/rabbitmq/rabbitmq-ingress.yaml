@@ -1,0 +1,33 @@
+# Management UI through Traefik. rabbitmq.local.lan resolves via the router DNS (used by the
+# homepage); rabbitmq.local is for machines that use /etc/hosts.
+# Only the UI (15672) is exposed: AMQP (5672) stays in-cluster (ClusterIP).
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: rabbitmq
+  namespace: messaging
+  # No gethomepage.dev annotations: the card is static in homepage/configmap.yaml,
+  # and auto-discovery on this Ingress would show it twice.
+spec:
+  ingressClassName: traefik
+  rules:
+    - host: rabbitmq.local.lan
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: rabbitmq
+                port:
+                  name: management
+    - host: rabbitmq.local
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: rabbitmq
+                port:
+                  name: management
